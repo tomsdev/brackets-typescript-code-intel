@@ -166,6 +166,9 @@ define(function (require, exports, module) {
         case "yaml":
         case "yml":
             return "yaml";
+                
+        case "ts":
+            return "typescript";
 
         default:
             console.log("Called EditorUtils.js _getModeFromFileExtensions with an unhandled file extension: " + ext);
