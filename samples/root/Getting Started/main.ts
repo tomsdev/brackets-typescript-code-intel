@@ -1,40 +1,41 @@
-///<reference path='ext.ts'/>
 ///<reference path='other.ts'/>
 
-// function doc
-function blabla() {
-    return "toto mod";
+function func3() {
+    return "func3 called";
 }
 
-// class doc
+/**
+ * class comment
+ */
 class Greeter {
     
-    // property doc
+    /**
+     * property comment
+     */
 	greeting: string;
     
-    // constructor doc
+    /**
+     * constructor comment
+     */
 	constructor (message: string) {
 		this.greeting = message;
 	}
     
     /**
-     * Creates a new Circle from a diameter.
-     *
-     * @param {number} nb The desired diameter of the circle.
-     * @return {string} The new Circle object.
+     * method comment
      */
-	public waza(nb: number) {
+	public sayHello() {
 		return "Hello, " + this.greeting;
 	}
 }
 
-// instance doc
+// instance comment
 var greeter = new Greeter("world");
 
-greeter.greeting = "yes";
+greeter.greeting = "brackets";
 
-blabla();
+greeter.sayHello();
 
-otherFn("ty");
-
-greeter.waza(123);
+var a = func1();
+var b = func2();
+var c = func3();

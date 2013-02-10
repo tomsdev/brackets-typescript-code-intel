@@ -1,22 +1,29 @@
-{{0}}function func1() {
+{{11}}function func1() {
     // comment
 }
 
 /*
  * comment
  */
-{{1}}var func2 = function() {
-
-{{2}}    func3: function() {
-        /* comment */
-    }
-
+{{21}}var func2 = function() {
 }
 
-function func4() {
-    return func1();
-}
-
-function func5() {
-    return true;
+class Greeter {
+    
+    // comment
+{{61}}greeting: string;
+    
+    /**
+     * comment
+     */
+{{51}}constructor (message: string) {
+		this.greeting = message;
+	}
+    
+    /**
+     * comment
+     */
+{{71}}public sayHello() {
+		return "Hello " + this.greeting;
+	}
 }

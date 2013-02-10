@@ -114,6 +114,41 @@ define(function (require, exports, module) {
         }
     };
     
+    /**
+     * Open an editor for the specified project relative file path
+     * then attempts opens an inline editor at the given offset and
+     * test if the cursor position is in the specified expected file
+     * at the correct given offset (use offset + 1).
+     * 
+     * For example:
+     * 
+     * given an openFile with content:
+     *     var a = {{10}}func1();
+     * and given an expectFile with content:
+     *     {{11}}function func1() { //code }
+     * 
+     * it will open an inline editor at {{10}}
+     * and expect the cursor position at {{11}}
+     * 
+     * @param {!number} offset The offset index location within openFile to open an inline editor.
+     * @param {!string} openFile Project relative file path to open in a main editor.
+     * @param {?string} expectFile Project relative file path expected to be open in the inline editor.
+     *                             Omit if the file is the same as the openFile.
+     */
+    var _inlineTest = function (offset, openFile, expectFile) {
+        expectFile = expectFile || openFile;
+        
+        initInlineTest(openFile, offset);
+        
+        runs(function () {
+            var inlineWidget = EditorManager.getCurrentFullEditor().getInlineWidgets()[0];
+            var inlinePos = inlineWidget.editors[0].getCursorPos();
+            
+            // verify cursor position in inline editor (use offset + 1)
+            expect(inlinePos).toEqual(this.infos[expectFile].offsets[offset + 1]);
+        });
+    };
+    
     describe("TypeScriptQuickEdit", function () {
 
         /*
@@ -240,27 +275,31 @@ define(function (require, exports, module) {
             });
             
             it("should open a function with  form: function functionName()", function () {
-                initInlineTest("test1main.ts", 0);
-                
-                runs(function () {
-                    var inlineWidget = EditorManager.getCurrentFullEditor().getInlineWidgets()[0];
-                    var inlinePos = inlineWidget.editors[0].getCursorPos();
-                    
-                    // verify cursor position in inline editor
-                    expect(inlinePos).toEqual(this.infos["test1inline.ts"].offsets[0]);
-                });
+                _inlineTest(10, "test1main.ts", "test1inline.ts");
             });
 
             it("should open a function with  form: functionName = function()", function () {
-                initInlineTest("test1main.ts", 1);
-                
-                runs(function () {
-                    var inlineWidget = EditorManager.getCurrentFullEditor().getInlineWidgets()[0];
-                    var inlinePos = inlineWidget.editors[0].getCursorPos();
-                    
-                    // verify cursor position in inline editor
-                    expect(inlinePos).toEqual(this.infos["test1inline.ts"].offsets[1]);
-                });
+                _inlineTest(20, "test1main.ts", "test1inline.ts");
+            });
+            
+            it("should open a function declared in the same file", function () {
+                _inlineTest(30, "test1main.ts");
+            });
+
+            it("should open an object declaration", function () {
+                _inlineTest(40, "test1main.ts");
+            });
+
+            it("should open a class constructor", function () {
+                _inlineTest(50, "test1main.ts", "test1inline.ts");
+            });
+
+            it("should open a class property", function () {
+                _inlineTest(60, "test1main.ts", "test1inline.ts");
+            });
+
+            it("should open a class method", function () {
+                _inlineTest(70, "test1main.ts", "test1inline.ts");
             });
         });
         

@@ -1,8 +1,16 @@
 ///<reference path='test1inline.ts'/>
 
-/*jslint vars: true, plusplus: true, devel: true, browser: true, nomen: true, indent: 4, maxerr: 50 */
-/*global func1: false, func2: false, func3: false */
+{{31}}function func3() {
+    // comment
+}
 
-var a = {{0}}func1();
-var b = fun{{1}}c2();
-var c = func3{{2}}();
+var a = {{10}}func1();
+var b = fun{{20}}c2();
+var c = func3{{30}}();
+
+// instance doc
+{{41}}var greeter = new {{50}}Greeter("world");
+
+{{40}}greeter.{{60}}greeting = "brackets";
+
+greeter.{{70}}sayHello();

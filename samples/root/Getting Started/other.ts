@@ -1,9 +1,10 @@
-function otherFn(text: string) {
-    console.log("unori");
-    console.log("deuxor");
-    console.log("troisis");
-    console.log("unori");
-    console.log("deuxor");
-    console.log("troisis");
-    return "autre file modified";
+function func1() {
+    return "func1 called";
+}
+
+/*
+ * function comment
+ */
+var func2 = function() {
+    return "func2 called";
 }
