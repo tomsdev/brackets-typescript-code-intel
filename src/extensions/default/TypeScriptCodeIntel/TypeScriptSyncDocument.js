@@ -65,12 +65,6 @@ define(function (require, exports, module) {
     // TODO: rename to TypeScriptDevelopment OR keep it as a private class?
     function TypeScriptSyncDocument(tsDoc) {
         this.tsDoc = tsDoc;
-
-        // load script content
-        this._attachDocument(this.tsDoc.doc, this._handleDocumentChange.bind(this)); //todo: surveiller que top de file et line changed pr references
-
-        // load references content
-        this._attachAllReferencedDocument();
     }
 
     /**
@@ -79,6 +73,14 @@ define(function (require, exports, module) {
      * @type {Document}
      */
     TypeScriptSyncDocument.prototype.tsDoc = null;
+    
+    TypeScriptSyncDocument.prototype.init = function () {    
+        // load script content
+        this._attachDocument(this.tsDoc.doc, this._handleDocumentChange.bind(this)); //todo: surveiller que top de file et line changed pr references
+
+        // load references content, return promise
+        return this._attachAllReferencedDocument();
+    };
 
     TypeScriptSyncDocument.prototype._handleReferencedDocumentChange = function (event, changedDoc, changes) {
         this.tsDoc.updateScriptWithChanges(changedDoc, changes);
@@ -104,6 +106,7 @@ define(function (require, exports, module) {
 
     TypeScriptSyncDocument.prototype._attachAllReferencedDocument = function () {
         var that = this,
+            result = new $.Deferred(),
             references = this.tsDoc.getReferences();
 
         Async.doInParallel(references, function (relativePath) {
@@ -125,7 +128,11 @@ define(function (require, exports, module) {
                 });
 
             return oneResult.promise();
+        }).done(function () {
+            result.resolve(this.tsDoc);
         });
+        
+        return result;
     };
 
 //    // todo: maintain a count of enable demands?

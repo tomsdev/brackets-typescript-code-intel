@@ -37,10 +37,10 @@
 define(function (require, exports, module) {
     "use strict";
 
-    var DocumentManager     = brackets.getModule("document/DocumentManager"),
-        PathUtils           = require("PathUtils"),
-        TypeScriptDocument       = require("TypeScriptDocument").TypeScriptDocument,
-        TypeScriptSyncDocument       = require("TypeScriptSyncDocument").TypeScriptSyncDocument;
+    var DocumentManager        = brackets.getModule("document/DocumentManager"),
+        PathUtils              = require("PathUtils"),
+        TypeScriptDocument     = require("TypeScriptDocument").TypeScriptDocument,
+        TypeScriptSyncDocument = require("TypeScriptSyncDocument").TypeScriptSyncDocument;
 
     /**
      * @private
@@ -51,18 +51,49 @@ define(function (require, exports, module) {
 
     var _currentSyncDocument;
 
-    // synchronous but can return null
-    // return tsDoc for doc (and create a syncDoc on it if necessary)
-    //todo: tsDoc or doc in param?
+    // return a synchronized tsDoc for the given doc
+    // warning: it doesn't wait for the tsDoc to be ready
     function get(doc) {
         var tsSyncDoc = _syncDocuments[doc.file.fullPath];
         // if the doc is not in the cache, create it
         if (!tsSyncDoc) {
             var tsDoc = new TypeScriptDocument(doc);
             tsSyncDoc = new TypeScriptSyncDocument(tsDoc);
+            tsSyncDoc.init();
             _syncDocuments[doc.file.fullPath] = tsSyncDoc;
         }
         return tsSyncDoc.tsDoc;
+    }
+    
+    // return a synchronized tsDoc for the given doc
+    function getAsync(doc) {
+        var tsSyncDoc = _syncDocuments[doc.file.fullPath],
+            result;
+        // if the doc is not in the cache, create it
+        if (!tsSyncDoc) {
+            var tsDoc = new TypeScriptDocument(doc);
+            tsSyncDoc = new TypeScriptSyncDocument(tsDoc);
+            result = tsSyncDoc.init();
+            _syncDocuments[doc.file.fullPath] = tsSyncDoc;
+        } else {
+            result = new $.Deferred();
+            result.resolve(tsSyncDoc.tsDoc);
+        }
+        return result;
+    }
+    
+    // return a synchronized tsDoc for the doc at the given fullPath
+    function getFromPathAsync(fullPath) {
+        var result = new $.Deferred();
+        
+        DocumentManager.getDocumentForPath(fullPath)
+            .done(function (doc) {
+                getAsync(doc).done(function (tsDoc) {
+                    result.resolve(tsDoc);
+                });
+            });
+        
+        return result;
     }
 
     /** Get the current document from the document manager
@@ -77,6 +108,9 @@ define(function (require, exports, module) {
     }
 
     function isDocumentHandled(doc) {
+        if (!doc) {
+            return null;
+        }
         return PathUtils.getExtension(doc.file.fullPath) === "ts";
     }
 
@@ -87,7 +121,7 @@ define(function (require, exports, module) {
     function _onCurrentDocumentChange() {
         var currentDoc = DocumentManager.getCurrentDocument();
 
-        if(!isDocumentHandled(currentDoc)) {
+        if (!isDocumentHandled(currentDoc)) {
             _currentSyncDocument = null;
             return;
         }
@@ -103,6 +137,8 @@ define(function (require, exports, module) {
 
     // Define public API
     exports.get           = get;
+    exports.getAsync          = getAsync;
+    exports.getFromPathAsync           = getFromPathAsync;
     exports.getCurrentDocument           = getCurrentDocument;
 
     // Performance measurements

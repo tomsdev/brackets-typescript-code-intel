@@ -37,10 +37,7 @@ define(function (require, exports, module) {
         FileUtils           = brackets.getModule("file/FileUtils"),
         NativeFileSystem    = brackets.getModule("file/NativeFileSystem").NativeFileSystem,
         SpecRunnerUtils     = brackets.getModule("spec/SpecRunnerUtils"),
-        UnitTestReporter    = brackets.getModule("test/UnitTestReporter"),
-    
-        TypeScriptQuickEdit = require("TypeScriptQuickEdit/main"),
-        TypeScriptService   = require("TypeScriptService");
+        UnitTestReporter    = brackets.getModule("test/UnitTestReporter");
 
     var extensionPath = FileUtils.getNativeModuleDirectoryPath(module),
         testPath = extensionPath + "/unittest-files/syntax",
@@ -95,6 +92,15 @@ define(function (require, exports, module) {
         runs(function () {
             workingSet.push(openFile);
             waitsForDone(SpecRunnerUtils.openProjectFiles(workingSet), "openProjectFiles");
+        });
+        
+        // wait for typescript service to process the file in the current test window
+        runs(function () {
+            var extensionRequire = testWindow.brackets.getModule("utils/ExtensionLoader").getRequireContextForExtension("TypeScriptCodeIntel");
+            var typeScriptService = extensionRequire("main").TypeScriptService;
+            var fullPath = testPath + "/" + openFile;
+            
+            waitsForDone(typeScriptService.getFromPathAsync(fullPath), "getFromPathAsync");
         });
         
         if (openOffset !== undefined) {
@@ -207,7 +213,7 @@ define(function (require, exports, module) {
                
                 runs(function () {
                     extensionRequire = testWindow.brackets.getModule("utils/ExtensionLoader").getRequireContextForExtension("TypeScriptCodeIntel");
-                    tsQuickEditMain = TypeScriptQuickEdit; //extensionRequire("main").TypeScriptQuickEdit;
+                    tsQuickEditMain = extensionRequire("main").TypeScriptQuickEdit;
                     editor = EditorManager.getCurrentFullEditor();
                     offsets = this.infos[tokensFile];
                     
@@ -232,42 +238,30 @@ define(function (require, exports, module) {
                     expect(promise).toBeNull();
                 });
             });
-
-//            it("should open a function with  form: function functionName()", function () {
-//                initInlineTest("test1main.ts", 0);
-//                
-//                runs(function () {
-//                    var inlineWidget = EditorManager.getCurrentFullEditor().getInlineWidgets()[0];
-//                    var inlinePos = inlineWidget.editors[0].getCursorPos();
-//                    
-//                    // verify cursor position in inline editor
-//                    expect(inlinePos).toEqual(this.infos["test1inline.ts"].offsets[0]);
-//                });
-//            });
-//
-//            it("should open a function with  form: functionName = function()", function () {
-//                initInlineTest("test1main.ts", 1);
-//                
-//                runs(function () {
-//                    var inlineWidget = EditorManager.getCurrentFullEditor().getInlineWidgets()[0];
-//                    var inlinePos = inlineWidget.editors[0].getCursorPos();
-//                    
-//                    // verify cursor position in inline editor
-//                    expect(inlinePos).toEqual(this.infos["test1inline.ts"].offsets[1]);
-//                });
-//            });
             
-//            it("should open a function with  form: functionName: function()", function () {
-//                initInlineTest("test1main.ts", 2);
-//                
-//                runs(function () {
-//                    var inlineWidget = EditorManager.getCurrentFullEditor().getInlineWidgets()[0];
-//                    var inlinePos = inlineWidget.editors[0].getCursorPos();
-//                    
-//                    // verify cursor position in inline editor
-//                    expect(inlinePos).toEqual(this.infos["test1inline.ts"].offsets[2]);
-//                });
-//            });
+            it("should open a function with  form: function functionName()", function () {
+                initInlineTest("test1main.ts", 0);
+                
+                runs(function () {
+                    var inlineWidget = EditorManager.getCurrentFullEditor().getInlineWidgets()[0];
+                    var inlinePos = inlineWidget.editors[0].getCursorPos();
+                    
+                    // verify cursor position in inline editor
+                    expect(inlinePos).toEqual(this.infos["test1inline.ts"].offsets[0]);
+                });
+            });
+
+            it("should open a function with  form: functionName = function()", function () {
+                initInlineTest("test1main.ts", 1);
+                
+                runs(function () {
+                    var inlineWidget = EditorManager.getCurrentFullEditor().getInlineWidgets()[0];
+                    var inlinePos = inlineWidget.editors[0].getCursorPos();
+                    
+                    // verify cursor position in inline editor
+                    expect(inlinePos).toEqual(this.infos["test1inline.ts"].offsets[1]);
+                });
+            });
         });
         
     });
