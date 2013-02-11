@@ -1,25 +1,25 @@
 /*
-* Copyright (c) 2012 Adobe Systems Incorporated. All rights reserved.
-*
-* Permission is hereby granted, free of charge, to any person obtaining a
-* copy of this software and associated documentation files (the "Software"),
-* to deal in the Software without restriction, including without limitation
-* the rights to use, copy, modify, merge, publish, distribute, sublicense,
-* and/or sell copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-* DEALINGS IN THE SOFTWARE.
-*
-*/
+ * Copyright (c) 2012 Adobe Systems Incorporated. All rights reserved.
+ *  
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"), 
+ * to deal in the Software without restriction, including without limitation 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the 
+ * Software is furnished to do so, subject to the following conditions:
+ *  
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *  
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * DEALINGS IN THE SOFTWARE.
+ * 
+ */
 
 
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50, regexp: true */
@@ -37,37 +37,20 @@
 define(function (require, exports, module) {
     "use strict";
 
-    //todo: keep it here or not?
     require("thirdparty/ServiceBuilder");
-
+    
+    var TypeScriptUtils = require("TypeScriptUtils");
+    
     /**
-     * Unique PreferencesManager clientID
+     * Function matching regular expression. Recognizes the forms:
+     * "function functionName()", "functionName = function()", and
+     * "functionName: function()".
+     *
+     * Note: JavaScript identifier matching is not strictly to spec. This
+     * RegExp matches any sequence of characters that is not whitespace.
+     * @type {RegExp}
      */
-    var PREFERENCES_CLIENT_ID = "com.adobe.brackets.DocumentManager";
-
-    /**
-     * @private
-     * All documents with refCount > 0. Maps Document.file.fullPath -> Document.
-     * @type {Object.<string, Document>}
-     */
-    // todo: delete it?
-    var _typeScriptDocuments = {};
-
-//    /**
-//     * Cleans up any loose Documents whose only ref is its own master Editor, and that Editor is not
-//     * rooted in the UI anywhere. This can happen if the Editor is auto-created via Document APIs that
-//     * trigger _ensureMasterEditor() without making it dirty. E.g. a command invoked on the focused
-//     * inline editor makes no-op edits or does a read-only operation.
-//     */
-//    function _gcDocuments() {
-//        getAllOpenDocuments().forEach(function (doc) {
-//            // Is the only ref to this document its own master Editor?
-//            if (doc._refCount === 1 && doc._masterEditor) {
-//                // Destroy the Editor if it's not being kept alive by the UI
-//                EditorManager._destroyEditorIfUnneeded(doc);
-//            }
-//        });
-//    }
+    var _referenceRegExp = /^\s*\/\/\/\s*<\s*reference\s+path\s*=\s*[""""']([^""""<>|]+)[""""']\s*\/>/gim;
 
     function getScriptName(doc) {
         return doc.file.fullPath;
@@ -75,21 +58,15 @@ define(function (require, exports, module) {
 
     /** Extract references from the content of a typescript file */
     function extractReferences(content) {
-        // match references line by line
-        var reg = new RegExp(/^\s*\/\/\/\s*<\s*reference\s+path\s*=\s*[""""']([^""""<>|]+)[""""']\s*\/>/gim);
-
-        var relativePaths = [];
-        var match, relativePath;
-
-        // iterate over all references found
-        do {
-            match = reg.exec(content);
-            if (match) {
-                relativePath = match[1];
-                console.log("reference found: ", relativePath);
-                relativePaths.push(relativePath);
-            }
-        } while (match);
+        var relativePaths = [],
+            match,
+            relativePath;
+        
+        while ((match = _referenceRegExp.exec(content)) !== null) {
+            relativePath = match[1];
+            console.log("Reference found: ", relativePath);
+            relativePaths.push(relativePath);
+        }
 
         return relativePaths;
     }
@@ -109,21 +86,9 @@ define(function (require, exports, module) {
      * @param {!string} rawText  Text content of the file.
      */
     function TypeScriptDocument(doc) {
-        //todo: delete it?
-        if (_typeScriptDocuments[doc.file.fullPath]) {
-            throw new Error("Creating a typescript document when one already exists, for: " + doc.file);
-        }
-        _typeScriptDocuments[doc.file.fullPath] = this;
-
         this.doc = doc;
         this.scriptName = getScriptName(doc);
-
         this.lsh = new ServiceBuilder.TypeScriptLSH();
-
-        //this.refreshText(rawText, initialTimestamp);
-
-        // This is a good point to clean up any old dangling Documents
-        //_gcDocuments();
     }
 
     /**
@@ -158,20 +123,10 @@ define(function (require, exports, module) {
      */
     TypeScriptDocument.prototype.references = null;
 
-    ///////////// Getters only //////////////////////////////
-
-    /// ScriptName or Other doc required ////////////////////////////////////////////////
-    // TODO: move or private this 3 methods
-
-    // return the cursor index based on the codemirror position
-    TypeScriptDocument.prototype.getIndexFromPos = function (pos, doc) {
-        return this.lsh.lineColToPosition(getScriptName(doc), pos.line + 1, pos.ch + 1);
-    };
-
     /**
      * Convert a TS offset position to a codemirror position
      */
-    TypeScriptDocument.prototype.getPosFromIndex = function (index, scriptName) {
+    TypeScriptDocument.prototype._getPosFromIndex = function (index, scriptName) {
         var result = this.lsh.positionToLineCol(scriptName, index);
         return {
             line: result.line - 1,
@@ -179,14 +134,17 @@ define(function (require, exports, module) {
         };
     };
 
-    TypeScriptDocument.prototype.getRange = function (minChar, limChar, scriptName) {
+    TypeScriptDocument.prototype._getRange = function (minChar, limChar, scriptName) {
         return {
-            start : this.getPosFromIndex(minChar, scriptName),
-            end :  this.getPosFromIndex(limChar, scriptName)
+            start : this._getPosFromIndex(minChar, scriptName),
+            end :  this._getPosFromIndex(limChar, scriptName)
         };
     };
-
-    /////////////////////////////////////////////////////////////////////////////////////
+    
+    // return the cursor index based on the codemirror position
+    TypeScriptDocument.prototype.getIndexFromPos = function (pos, doc) {
+        return this.lsh.lineColToPosition(getScriptName(doc), pos.line + 1, pos.ch + 1);
+    };
 
     TypeScriptDocument.prototype.getScriptAST = function () {
         return this.langSvc.getScriptAST(this.scriptName);
@@ -201,7 +159,7 @@ define(function (require, exports, module) {
         return this.getSymbolAtIndex(index);
     };
 
-    // warning: index must be correct (after a dot for example)
+    // warning: given index must be well positioned (for example: just after a dot for a member)
     TypeScriptDocument.prototype.getCompletionsAtIndex = function (index, isMember) {
         return this.langSvc.getCompletionsAtPosition(this.scriptName, index, isMember);
     };
@@ -214,7 +172,6 @@ define(function (require, exports, module) {
         if (symbol.unitIndex === -1) {
             return null;
         }
-
         return this.lsh.scripts[symbol.unitIndex].name;
     };
 
@@ -222,15 +179,11 @@ define(function (require, exports, module) {
         if (!symbol || !symbol.declAST || symbol.declAST.minChar === undefined) {
             return null;
         }
-
-        var minChar = symbol.declAST.minChar;
-        var limChar = symbol.declAST.limChar;
-
-        // todo: what if its a file parent or child??
-        var scriptName = this.getScriptNameFromSymbol(symbol);
-
-        var range = this.getRange(minChar, limChar, scriptName);
-
+        var minChar = symbol.declAST.minChar,
+            limChar = symbol.declAST.limChar,
+            scriptName = this.getScriptNameFromSymbol(symbol),
+            range = this._getRange(minChar, limChar, scriptName);
+        
         return {
             name: symbol.name,
             range: range,
@@ -242,21 +195,17 @@ define(function (require, exports, module) {
         return this.doc.getText();
     };
 
-    // todo: cache (and maintain cache updated)
+    //TODO: cache (and maintain cache updated)
     TypeScriptDocument.prototype.getReferences = function () {
         var references = extractReferences(this.getText());
         return references;
     };
 
-    ////////// Modifier /////////////////////////////
-    // TODO: move?
-
-    // add script to TS doc
-    // optional......
-    // todo: rename?
     TypeScriptDocument.prototype.updateScriptWithText = function (doc) {
         this.lsh.updateScript(getScriptName(doc), doc.getText(), false);
-        // todo: only when add.. i think
+        
+        //TODO: do it only when add
+        // we have to update typescript language service when a new script is added
         this.langSvc = this.lsh.getLanguageService();
     };
 
@@ -266,10 +215,9 @@ define(function (require, exports, module) {
             // Update all the script
             this.updateScriptWithText(doc, doc.getText());
         }
-
-        var minChar = this.getIndexFromPos(change.from, doc);
-        var limChar = this.getIndexFromPos(change.to, doc);
-        var newText = change.text.join('\n');
+        var minChar = this.getIndexFromPos(change.from, doc),
+            limChar = this.getIndexFromPos(change.to, doc),
+            newText = change.text.join('\n');
 
         this.lsh.editScript(getScriptName(doc), minChar, limChar, newText);
     };
@@ -281,7 +229,12 @@ define(function (require, exports, module) {
             changes = changes.next;
         }
     };
-
+    
+    TypeScriptDocument.prototype.triggerHandlerChange = function () {
+        console.log("Content change: ", this.scriptName);
+        $(this).triggerHandler("change");
+    };
+    
     // Define public API
     exports.TypeScriptDocument          = TypeScriptDocument;
 });

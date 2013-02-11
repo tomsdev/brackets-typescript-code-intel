@@ -28,7 +28,6 @@
 define(function (require, exports, module) {
     "use strict";
     
-    // Brackets modules
     var AppInit                 = brackets.getModule("utils/AppInit"),
         MultiRangeInlineEditor  = brackets.getModule("editor/MultiRangeInlineEditor").MultiRangeInlineEditor,
         FileIndexManager        = brackets.getModule("project/FileIndexManager"),
@@ -37,6 +36,7 @@ define(function (require, exports, module) {
         NativeFileSystem        = brackets.getModule("file/NativeFileSystem").NativeFileSystem,
         FileUtils               = brackets.getModule("file/FileUtils"),
         Async                   = brackets.getModule("utils/Async"),
+        TypeScriptUtils         = require("TypeScriptUtils"),
         TypeScriptService       = require("TypeScriptService");
     
     /**
@@ -50,14 +50,7 @@ define(function (require, exports, module) {
      */
     function _createInlineEditor(hostEditor, hostTsDoc, declInfo) {
         var result = new $.Deferred();
-        // Cancel if the symbol declaration is the same as the current selection
-        if (declInfo.scriptName === hostTsDoc.scriptName) {
-            var line = hostEditor.getSelection(false).start.line;
-            if (declInfo.range.start.line === line) {
-                return null;
-            }
-        }
-
+        
         DocumentManager.getDocumentForPath(declInfo.scriptName)
             .done(function (doc) {
                 var functions = [{
@@ -66,11 +59,9 @@ define(function (require, exports, module) {
                     lineEnd: declInfo.range.end.line,
                     name: declInfo.name
                 }];
-
-                //TODO: use a one range inline editor if there is always one result
+                //TODO: use a one range inline editor if there is always one result?
                 var jsInlineEditor = new MultiRangeInlineEditor(functions);
                 jsInlineEditor.load(hostEditor);
-                
                 result.resolve(jsInlineEditor);
             })
             .fail(function (error) {
@@ -91,11 +82,8 @@ define(function (require, exports, module) {
      *      or null if we're not going to provide anything.
      */
     function typeScriptFunctionProvider(hostEditor, pos) {
-        
-        console.log("QuickEdit run!");
-        
-        // Only provide a JavaScript editor when cursor is in JavaScript content
-        if (hostEditor.getModeForSelection() !== "typescript") {
+        // Only provide a TypeScript editor when cursor is in TypeScript content
+        if (hostEditor.getModeForSelection() !== TypeScriptUtils.MODE_NAME) {
             return null;
         }
         
@@ -105,15 +93,22 @@ define(function (require, exports, module) {
             return null;
         }
 
-        //todo: debug to see if it's the currentDocument in fact ?
-        //todo: async? null?
+        //TODO: async? null?
         var hostTsDoc = TypeScriptService.get(hostEditor.document);
-
         var symbol = hostTsDoc.getSymbolAtPosition(sel.start);
         var declInfo = hostTsDoc.getDeclarationInfo(symbol);
-
+        
+        // Cancel if there is no declaration associated to the current selection
         if (!declInfo) {
             return null;
+        }
+        
+        // Cancel if the declaration is at the same line as the current selection
+        if (declInfo.scriptName === hostTsDoc.scriptName) {
+            var line = hostEditor.getSelection(false).start.line;
+            if (declInfo.range.start.line === line) {
+                return null;
+            }
         }
 
         return _createInlineEditor(hostEditor, hostTsDoc, declInfo);

@@ -28,10 +28,13 @@
 define(function (require, exports, module) {
     "use strict";
 
-    exports.TypeScriptService       = require("TypeScriptService"),
-    exports.TypeScriptQuickEdit     = require("TypeScriptQuickEdit/main"),
-    exports.TypeScriptCodeHints     = require("TypeScriptCodeHints/main");
-
+    exports.TypeScriptUtils     = require("TypeScriptUtils");
+    exports.TypeScriptService   = require("TypeScriptService");
+    exports.TypeScriptQuickEdit = require("TypeScriptQuickEdit/main");
+    exports.TypeScriptCodeHints = require("TypeScriptCodeHints/main");
+    
+    // Memo for typescript symbol content
+    //
     // function getSymbol(index) {
     //     var doc = DocumentManager.getCurrentDocument();
     //     var symbol = getSymbolAtPosition(doc, index);
@@ -82,5 +85,4 @@ define(function (require, exports, module) {
 
     //     return symbol;
     // }
-
 });
