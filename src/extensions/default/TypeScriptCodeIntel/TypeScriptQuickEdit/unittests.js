@@ -97,7 +97,7 @@ define(function (require, exports, module) {
         // wait for typescript service to process the file in the current test window
         runs(function () {
             var extensionRequire = testWindow.brackets.getModule("utils/ExtensionLoader").getRequireContextForExtension("TypeScriptCodeIntel");
-            var typeScriptService = extensionRequire("main").TypeScriptService;
+            var typeScriptService = extensionRequire("main").TypeScript.TypeScriptService;
             var fullPath = testPath + "/" + openFile;
             
             waitsForDone(typeScriptService.getFromPathAsync(fullPath), "getFromPathAsync");
@@ -149,7 +149,7 @@ define(function (require, exports, module) {
         });
     };
     
-    describe("TypeScriptQuickEdit", function () {
+    describe("TypeScript Quick Edit", function () {
 
         /*
          * 

@@ -40,9 +40,9 @@ define(function (require, exports, module) {
     var DocumentManager     = brackets.getModule("document/DocumentManager"),
         FileUtils           = brackets.getModule("file/FileUtils"),
         Async               = brackets.getModule("utils/Async"),
-        TypeScriptUtils     = require("TypeScriptUtils"),
         PathUtils           = require("PathUtils"),
-        TypeScriptDocument  = require("TypeScriptDocument");
+        TypeScriptUtils     = require("TypeScript/TypeScriptUtils"),
+        TypeScriptDocument  = require("TypeScript/TypeScriptDocument");
 
     /**
      * @constructor

@@ -39,10 +39,10 @@ define(function (require, exports, module) {
 
     var DocumentManager        = brackets.getModule("document/DocumentManager"),
         EditorManager          = brackets.getModule("editor/EditorManager"),
-        TypeScriptUtils        = require("TypeScriptUtils"),
         PathUtils              = require("PathUtils"),
-        TypeScriptDocument     = require("TypeScriptDocument").TypeScriptDocument,
-        TypeScriptSession      = require("TypeScriptSession").TypeScriptSession;
+        TypeScriptUtils        = require("TypeScript/TypeScriptUtils"),
+        TypeScriptDocument     = require("TypeScript/TypeScriptDocument").TypeScriptDocument,
+        TypeScriptSession      = require("TypeScript/TypeScriptSession").TypeScriptSession;
 
     /**
      * @private

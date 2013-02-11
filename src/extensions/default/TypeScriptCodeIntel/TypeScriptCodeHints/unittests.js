@@ -433,6 +433,8 @@ define(function (require, exports, module) {
             
         });
         
+//        //TODO TOM: change fichier testPath ici pour pointer sur un nouveau fichier.ts
+//        // et tester le code hint avec les class, propriété, méthodes...
 //        describe("TypeScript Code Hinting", function () {
 //   
 //            beforeEach(function () {

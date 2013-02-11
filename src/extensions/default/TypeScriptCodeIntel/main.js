@@ -28,61 +28,7 @@
 define(function (require, exports, module) {
     "use strict";
 
-    exports.TypeScriptUtils     = require("TypeScriptUtils");
-    exports.TypeScriptService   = require("TypeScriptService");
+    exports.TypeScript          = require("TypeScript/main");
     exports.TypeScriptQuickEdit = require("TypeScriptQuickEdit/main");
     exports.TypeScriptCodeHints = require("TypeScriptCodeHints/main");
-    
-    // Memo for typescript symbol content
-    //
-    // function getSymbol(index) {
-    //     var doc = DocumentManager.getCurrentDocument();
-    //     var symbol = getSymbolAtPosition(doc, index);
-
-    //     var info = {};
-    //     if (symbol) {
-    //         if (symbol.unitIndex !== -1) {
-    //             info.fileName = getFileName(symbol.unitIndex);
-    //         }
-
-    //         if (symbol.declAST) {
-    //             info.hasAST = true;
-    //             info.nodeType = TypeScript.NodeType._map[symbol.declAST.nodeType];
-
-    //             if (symbol.declAST.minChar !== undefined) {
-    //                 info.minChar = symbol.declAST.minChar;
-    //             }
-
-    //             if (symbol.declAST.limChar !== undefined) {
-    //                 info.limChar = symbol.declAST.limChar;
-    //             }
-
-    //             if (symbol.declAST.preComments && symbol.declAST.preComments.length > 0) {
-    //                 // todo: get other comments line in the array
-    //                 // bug: no comments when it's a class method
-    //                 info.declComments = symbol.declAST.preComments[0].content;
-    //             }
-
-    //             if (symbol.declAST.arguments) {
-    //                 if (symbol.declAST.arguments.members && symbol.declAST.arguments.members.length > 0) {
-    //                     //todo: other parameters
-    //                     var parameters = symbol.declAST.arguments.members;
-    //                     var name = parameters[0].id.text;
-    //                     var type = parameters[0].typeExpr.term.text;
-
-    //                     info.firstParameter = name + " : " + type;
-    //                 }
-    //             }
-    //         }
-
-    //         if (symbol.container) {
-    //             info.container = symbol.container.name;
-    //         }
-            
-    //         //console.log("symbol info: ", JSON.stringify(info));
-    //         //console.log(symbol);
-    //     }
-
-    //     return symbol;
-    // }
 });

@@ -36,8 +36,8 @@ define(function (require, exports, module) {
         NativeFileSystem        = brackets.getModule("file/NativeFileSystem").NativeFileSystem,
         FileUtils               = brackets.getModule("file/FileUtils"),
         Async                   = brackets.getModule("utils/Async"),
-        TypeScriptUtils         = require("TypeScriptUtils"),
-        TypeScriptService       = require("TypeScriptService");
+        TypeScriptUtils         = require("TypeScript/main").TypeScriptUtils,
+        TypeScriptService       = require("TypeScript/main").TypeScriptService;
     
     /**
      * @private

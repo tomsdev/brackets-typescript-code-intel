@@ -32,8 +32,8 @@ define(function (require, exports, module) {
 		CodeHintManager     = brackets.getModule("editor/CodeHintManager"),
         Async               = brackets.getModule("utils/Async"),
         StringUtils         = brackets.getModule("utils/StringUtils"),
-        TypeScriptUtils     = require("TypeScriptUtils"),
-        TypeScriptService   = require("TypeScriptService");
+        TypeScriptUtils     = require("TypeScript/main").TypeScriptUtils,
+        TypeScriptService   = require("TypeScript/main").TypeScriptService;
     
     var SINGLE_QUOTE    = "\'",
         DOUBLE_QUOTE    = "\"";

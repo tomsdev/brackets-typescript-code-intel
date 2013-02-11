@@ -37,9 +37,9 @@
 define(function (require, exports, module) {
     "use strict";
 
-    require("thirdparty/ServiceBuilder");
+    require("TypeScript/thirdparty/ServiceBuilder");
     
-    var TypeScriptUtils = require("TypeScriptUtils");
+    var TypeScriptUtils = require("TypeScript/TypeScriptUtils");
     
     /**
      * Function matching regular expression. Recognizes the forms:
