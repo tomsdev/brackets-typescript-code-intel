@@ -28,5 +28,6 @@
 define(function (require, exports, module) {
     "use strict";
 
+    require("TypeScriptCodeHints/unittests");
     require("TypeScriptQuickEdit/unittests");
 });
