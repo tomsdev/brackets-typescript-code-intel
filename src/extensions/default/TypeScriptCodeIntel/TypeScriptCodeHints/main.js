@@ -31,8 +31,12 @@ define(function (require, exports, module) {
 	var AppInit             = brackets.getModule("utils/AppInit"),
 		CodeHintManager     = brackets.getModule("editor/CodeHintManager"),
         Async               = brackets.getModule("utils/Async"),
+        StringUtils         = brackets.getModule("utils/StringUtils"),
         TypeScriptUtils     = require("TypeScriptUtils"),
         TypeScriptService   = require("TypeScriptService");
+    
+    var SINGLE_QUOTE    = "\'",
+        DOUBLE_QUOTE    = "\"";
     
     /*
      * Get a typescript-code-hint-specific event name
@@ -86,6 +90,139 @@ define(function (require, exports, module) {
             info: info
         };
     }
+    
+    /**
+     * Creates a hint response object
+     */
+    function getResponse(hints, query) {
+
+        var trimmedQuery,
+            filteredHints,
+            formattedHints;
+        
+        // Sample hints data:
+
+        // member
+        //CompletionEntry
+        //    kind: "property"
+        //    kindModifiers: "public"
+        //    name: "greeting"
+        //    type: "string"
+        //
+        //CompletionEntry
+        //    kind: "method"
+        //    kindModifiers: "public"
+        //    name: "sayHello"
+        //    type: "() => string"
+        
+        // anywhere
+        //CompletionEntry
+        //    kind: "keyword"
+        //    kindModifiers: ""
+        //    name: "number"
+        //    type: "number"
+        //        
+        //CompletionEntry
+        //    kind: "variable"
+        //    kindModifiers: ""
+        //    name: "c"
+        //    type: "string"
+        //
+        //CompletionEntry
+        //    kind: "function"
+        //    kindModifiers: ""
+        //    name: "func1"
+        //    type: "() => string"
+        //
+        //CompletionEntry
+        //    kind: "variable"
+        //    kindModifiers: ""
+        //    name: "func2"
+        //    type: "() => string"
+
+        /*
+         * Filter a list of tokens using a given query string
+         */
+        function filterWithQuery(hints) {
+            // If the query is non-empty then the hints are filtered.
+            if (query.length > 0) {
+                return hints.filter(function (entry) {
+                    return (entry.name.indexOf(query) === 0);
+                });
+            } else {
+                return hints;
+            }
+        }
+
+        /*
+         * Returns a formatted list of hints with the query substring highlighted
+         */
+        function formatHints(hints, query) {
+            return hints.map(function (entry) {
+                var hint        = entry.name + ': ' + entry.type,
+                    index       = hint.indexOf(query),
+                    $hintObj    = $('<span>'),
+                    delimiter   = "";
+
+                switch (entry.kind) {
+                case "keyword":
+                    $hintObj.css('color', 'rgb(0,100,0)'); // green
+                    break;
+                case "variable":
+                    $hintObj.css('color', 'rgb(125,125,0)'); // yellow
+                    break;
+                case "property":
+                    $hintObj.css('color', 'rgb(125,125,125)'); // ?
+                    break;
+                case "function":
+                    $hintObj.css('color', 'rgb(0,0,100)'); // blue
+                    break;
+                case "method":
+                    $hintObj.css('color', 'rgb(100,0,100)'); // ?
+                    break;
+                }
+
+                // higlight the matched portion of each hint
+                if (index >= 0) {
+                    var prefix  = StringUtils.htmlEscape(hint.slice(0, index)),
+                        match   = StringUtils.htmlEscape(hint.slice(index, index + query.length)),
+                        suffix  = StringUtils.htmlEscape(hint.slice(index + query.length));
+
+                    $hintObj.append(delimiter + prefix)
+                        .append($('<span>')
+                                .append(match)
+                                .css('font-weight', 'bold'))
+                        .append(suffix + delimiter);
+                } else {
+                    $hintObj.text(delimiter + hint + delimiter);
+                }
+                $hintObj.data('entry', entry);
+                
+                return $hintObj;
+            });
+        }
+
+        // trim leading and trailing string literal delimiters from the query
+        if (query.indexOf(SINGLE_QUOTE) === 0 ||
+                query.indexOf(DOUBLE_QUOTE) === 0) {
+            trimmedQuery = query.substring(1);
+            if (trimmedQuery.lastIndexOf(DOUBLE_QUOTE) === trimmedQuery.length - 1 ||
+                    trimmedQuery.lastIndexOf(SINGLE_QUOTE) === trimmedQuery.length - 1) {
+                trimmedQuery = trimmedQuery.substring(0, trimmedQuery.length - 1);
+            }
+        } else {
+            trimmedQuery = query;
+        }
+
+        filteredHints = filterWithQuery(hints).slice(0, 100);
+        formattedHints = formatHints(filteredHints, trimmedQuery);
+
+        return {
+            hints: formattedHints,
+            match: null, // the CodeHintManager should not format the results
+            selectInitial: true
+        };
+    }
 
 	/**
 	 * @constructor
@@ -128,21 +265,11 @@ define(function (require, exports, module) {
 	TsHints.prototype._getHints = function (implicitChar) {
         var that = this,
             completion = getCompletionAtPosition(this.editor.getCursorPos(), this.editor.document);
-
+        
         // Store the text that was already typed
         this.currentText = completion.info.currentText;
-
-        var hints = $.map(completion.entries, function (entry) {
-            if (!that.currentText || entry.name.indexOf(that.currentText) === 0) {
-                return entry.name + ': ' + entry.type;
-            }
-        }).sort();
-
-        return {
-            hints: hints,
-            match: that.currentText,
-            selectInitial: true
-        };
+        
+        return getResponse(completion.entries, completion.info.currentText);
 	};
     
     /**
@@ -193,11 +320,11 @@ define(function (require, exports, module) {
 	 * Indicates whether the manager should follow hint insertion with an
 	 * additional explicit hint request.
 	 */
-	TsHints.prototype.insertHint = function (hint) {
-		var cursor = this.editor.getCursorPos(),
-			keepHints = false,
-            // Take only the part of the hint before ':'
-            text = hint.match(/^[^:]*/)[0];
+	TsHints.prototype.insertHint = function ($hintObj) {
+        var hint = $hintObj.data('entry'),
+            text = hint.name,
+            cursor = this.editor.getCursorPos(),
+			keepHints = false;
 
 		// Subtract the text that was already typed
 		if (this.currentText) {
@@ -214,6 +341,6 @@ define(function (require, exports, module) {
 		CodeHintManager.registerHintProvider(tsHints, [TypeScriptUtils.MODE_NAME], 0);
 
 		// For unit testing
-		exports.tsHintsProvider = tsHints;
+		exports.tsHintProvider = tsHints;
 	});
 });
