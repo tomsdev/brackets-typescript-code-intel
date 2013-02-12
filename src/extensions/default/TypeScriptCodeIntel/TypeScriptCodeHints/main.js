@@ -28,17 +28,17 @@
 define(function (require, exports, module) {
 	"use strict";
 
-	var AppInit             = brackets.getModule("utils/AppInit"),
-		CodeHintManager     = brackets.getModule("editor/CodeHintManager"),
-        Async               = brackets.getModule("utils/Async"),
-        StringUtils         = brackets.getModule("utils/StringUtils"),
-        TypeScriptUtils     = require("TypeScript/main").TypeScriptUtils,
-        TypeScriptService   = require("TypeScript/main").TypeScriptService;
+	var AppInit           = brackets.getModule("utils/AppInit"),
+		CodeHintManager   = brackets.getModule("editor/CodeHintManager"),
+        Async             = brackets.getModule("utils/Async"),
+        StringUtils       = brackets.getModule("utils/StringUtils"),
+        TypeScriptUtils   = require("TypeScript/main").TypeScriptUtils,
+        TypeScriptService = require("TypeScript/main").TypeScriptService;
     
     var SINGLE_QUOTE    = "\'",
         DOUBLE_QUOTE    = "\"";
     
-    /*
+    /**
      * Get a typescript-code-hint-specific event name
      */
     function eventName(name) {
@@ -46,7 +46,15 @@ define(function (require, exports, module) {
         return name + "." + EVENT_TAG;
     }
 
-    function getCompletionInfo(previousCode, endIndex) {
+    /**
+     * Returns the information needed by typescript to provide completion
+     * at the given index position.
+     * @param {!string} previousCode Code before the position asking for completion
+     * @param {!number} endIndex Index position of the end of previousCode
+     * @returns {{index: number, isMember: boolean, currentText: string}}
+     * @private
+     */
+    function _getCompletionInfo(previousCode, endIndex) {
         var isMember = false,
             lastChar = previousCode[endIndex - 1],
             currentText = "",
@@ -79,11 +87,19 @@ define(function (require, exports, module) {
         };
     }
 
-    function getCompletionAtPosition(pos, doc) {
+    /**
+     * Returns the completion entries given by typescript and some information about
+     * the completion.
+     * @param {!{line:number, ch:number}} pos Position where the completion happens
+     * @param {!Document} doc Document where the completion happens
+     * @returns {{entries: Array, info: {index: number, isMember: boolean, currentText: string}}}
+     * @private
+     */
+    function _getCompletionAtPosition(pos, doc) {
         var tsDoc = TypeScriptService.get(doc),
             index = tsDoc.getIndexFromPos(pos, doc),
             textBefore = doc.getRange({line: 0, ch: 0}, pos),
-            info = getCompletionInfo(textBefore, index),
+            info = _getCompletionInfo(textBefore, index),
             completions = tsDoc.getCompletionsAtIndex(info.index, info.isMember);
         return {
             entries: completions.entries,
@@ -93,55 +109,51 @@ define(function (require, exports, module) {
     
     /**
      * Creates a hint response object
+     * @private
      */
-    function getResponse(hints, query) {
+    function _getResponse(hints, query) {
 
         var trimmedQuery,
             filteredHints,
             formattedHints;
         
         // Sample hints data:
-
-        // member
+        // For a member:
         //CompletionEntry
         //    kind: "property"
         //    kindModifiers: "public"
         //    name: "greeting"
         //    type: "string"
-        //
         //CompletionEntry
         //    kind: "method"
         //    kindModifiers: "public"
         //    name: "sayHello"
         //    type: "() => string"
-        
-        // anywhere
+        //
+        // From anywhere:
         //CompletionEntry
         //    kind: "keyword"
         //    kindModifiers: ""
         //    name: "number"
         //    type: "number"
-        //        
         //CompletionEntry
         //    kind: "variable"
         //    kindModifiers: ""
         //    name: "c"
         //    type: "string"
-        //
         //CompletionEntry
         //    kind: "function"
         //    kindModifiers: ""
         //    name: "func1"
         //    type: "() => string"
-        //
         //CompletionEntry
         //    kind: "variable"
         //    kindModifiers: ""
         //    name: "func2"
         //    type: "() => string"
 
-        /*
-         * Filter a list of tokens using a given query string
+        /**
+         * Filter a list of hints using a given query string
          */
         function filterWithQuery(hints) {
             // If the query is non-empty then the hints are filtered.
@@ -154,7 +166,7 @@ define(function (require, exports, module) {
             }
         }
 
-        /*
+        /**
          * Returns a formatted list of hints with the query substring highlighted
          */
         function formatHints(hints, query) {
@@ -164,6 +176,7 @@ define(function (require, exports, module) {
                     $hintObj    = $('<span>'),
                     delimiter   = "";
 
+                //TODO: put the same colors that codemirror uses for TypeScript
                 switch (entry.kind) {
                 case "keyword":
                     $hintObj.css('color', 'rgb(0,100,0)'); // green
@@ -182,7 +195,7 @@ define(function (require, exports, module) {
                     break;
                 }
 
-                // higlight the matched portion of each hint
+                // highlight the matched portion of each hint
                 if (index >= 0) {
                     var prefix  = StringUtils.htmlEscape(hint.slice(0, index)),
                         match   = StringUtils.htmlEscape(hint.slice(index, index + query.length)),
@@ -233,8 +246,7 @@ define(function (require, exports, module) {
 	}
 
 	/**
-	 * Determines whether CSS propertyname or -name hints are available in the current editor
-	 * context.
+	 * Determines whether hints are available for a given editor context.
 	 *
 	 * @param {Editor} editor
 	 * A non-null editor object for the active window.
@@ -258,23 +270,12 @@ define(function (require, exports, module) {
 			result = (this.primaryTriggerKeys.indexOf(implicitChar) !== -1) ||
 				(this.secondaryTriggerKeys.indexOf(implicitChar) !== -1);
 		}
-
 		return result;
-	};
-
-	TsHints.prototype._getHints = function (implicitChar) {
-        var that = this,
-            completion = getCompletionAtPosition(this.editor.getCursorPos(), this.editor.document);
-        
-        // Store the text that was already typed
-        this.currentText = completion.info.currentText;
-        
-        return getResponse(completion.entries, completion.info.currentText);
 	};
     
     /**
-	 * Returns a list of availble CSS protertyname or -value hints if possible for the current
-	 * editor context.
+	 * Returns a list of hints, possibly deferred, for the current editor
+     * context.
 	 *
 	 * @param {Editor} implicitChar
 	 * Either null, if the hinting request was explicit, or a single character
@@ -292,29 +293,43 @@ define(function (require, exports, module) {
 	 *    selected by default in the hint list window.
 	 */
     TsHints.prototype.getHints = function (implicitChar) {
+        var that = this;
+
+        /**
+         * Return a list of hints for the current editor context.
+         */
+        function _getHints(implicitChar) {
+            var completion = _getCompletionAtPosition(that.editor.getCursorPos(),
+                                                      that.editor.document);
+            // Store the text that was already typed
+            that.currentText = completion.info.currentText;
+            return _getResponse(completion.entries, completion.info.currentText);
+        }
+
         if (implicitChar) {
             var result = new $.Deferred(),
                 tsDoc = TypeScriptService.get(this.editor.document);
             
-            // wait for the current typescript document "change" event because typescript has
-            // to process the file with the changes before getting the completions
+            // wait for the current typescript document "change" event because typescript
+            // has to process the file with the changes before getting the completions
             $(tsDoc).on(eventName("change"), function () {
                 $(tsDoc).off(eventName("change"));
-                var hints = this._getHints(implicitChar);
+
+                var hints = _getHints(implicitChar);
                 result.resolve(hints);
             }.bind(this));
             
             return result;
         } else {
-            return this._getHints(implicitChar);
+            return _getHints(implicitChar);
         }
     };
 
 	/**
-	 * Inserts a given CSS protertyname or -value hint into the current editor context.
+	 * Enters the code completion text into the editor.
 	 *
-	 * @param {String} hint
-	 * The hint to be inserted into the editor context.
+	 * @param $hintObj
+	 * The hint object  to be inserted into the editor context.
 	 *
 	 * @return {Boolean}
 	 * Indicates whether the manager should follow hint insertion with an
@@ -325,12 +340,10 @@ define(function (require, exports, module) {
             text = hint.name,
             cursor = this.editor.getCursorPos(),
 			keepHints = false;
-
 		// Subtract the text that was already typed
 		if (this.currentText) {
 			text = text.substring(this.currentText.length);
 		}
-
 		// Insert the completion at the cursor position
 		this.editor.document.replaceRange(text, cursor);
 		return keepHints;

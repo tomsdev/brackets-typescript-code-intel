@@ -25,85 +25,98 @@
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50 */
 /*global define, brackets, $ */
 
-/**
- * DocumentManager maintains a list of currently 'open' Documents. It also owns the list of files in
- * the working set, and the notion of which Document is currently shown in the main editor UI area.
- *
- * This module dispatches several events:
- *
- *    - dirtyFlagChange -- When any Document's isDirty flag changes. The 2nd arg to the listener is the
- *      Document whose flag changed.
- */
 define(function (require, exports, module) {
     "use strict";
 
-    var DocumentManager     = brackets.getModule("document/DocumentManager"),
-        FileUtils           = brackets.getModule("file/FileUtils"),
-        Async               = brackets.getModule("utils/Async"),
-        PathUtils           = require("PathUtils"),
-        TypeScriptUtils     = require("TypeScript/TypeScriptUtils"),
-        TypeScriptDocument  = require("TypeScript/TypeScriptDocument");
+    var DocumentManager    = brackets.getModule("document/DocumentManager"),
+        FileUtils          = brackets.getModule("file/FileUtils"),
+        Async              = brackets.getModule("utils/Async"),
+        PathUtils          = require("PathUtils"),
+        TypeScriptUtils    = require("TypeScript/TypeScriptUtils"),
+        TypeScriptDocument = require("TypeScript/TypeScriptDocument");
 
     /**
      * @constructor
-     * Model for the contents of a single file and its current modification state.
-     * See DocumentManager documentation for important usage notes.
      *
-     * Document dispatches these events:
      *
-     * deleted -- When the file for this document has been deleted. All views onto the document should
-     *      be closed. The document will no longer be editable or dispatch "change" events.
-     *
-     * @param {!FileEntry} file  Need not lie within the project.
-     * @param {!Date} initialTimestamp  File's timestamp when we read it off disk.
-     * @param {!string} rawText  Text content of the file.
+     * @param {!Document} tsDoc
      */
-    // TODO: rename to TypeScriptSession
     function TypeScriptSession(tsDoc) {
         this.tsDoc = tsDoc;
     }
 
     /**
-     * Whether this document has unsaved changes or not.
-     * When this changes on any Document, DocumentManager dispatches a "dirtyFlagChange" event.
-     * @type {Document}
+     * TypeScriptDocument that this session maintains updated.
+     * @type {!TypeScriptDocument}
      */
     TypeScriptSession.prototype.tsDoc = null;
-    
+
+    /**
+     * Adds, processes and attaches all the scripts contents for this TypeScriptDocument
+     * and its references.
+     * @returns {$.Promise} A promise object that will be resolved with this
+     *      TypeScriptDocument when all referenced documents has been processed.
+     */
     TypeScriptSession.prototype.init = function () {
-        // load script content
-        //TODO: surveiller que top de file et line changed pr references
+        // Attach this document
         this._attachDocument(this.tsDoc.doc, this._handleDocumentChange.bind(this));
-        // load references content, return promise
-        return this._attachAllReferencedDocument();
+        // Attach referenced documents and return a promise
+        return this._attachAllReferencedDocuments();
     };
 
-    TypeScriptSession.prototype._handleReferencedDocumentChange = function (event, changedDoc, changes) {
-        this.tsDoc.updateScriptWithChanges(changedDoc, changes);
+    /**
+     * Updates this TypeScriptDocument's script contents with the given changes for
+     * the given referenced document.
+     * @param event
+     * @param {!Document} referencedDoc A referenced document
+     * @param {!{from:number, to:number, text:string, next:{from:number, to:number, text:string}}} changes
+     * @private
+     */
+    TypeScriptSession.prototype._handleReferencedDocumentChange = function (event, referencedDoc, changes) {
+        this.tsDoc.updateScriptWithChanges(referencedDoc, changes);
         this.tsDoc.triggerHandlerChange();
     };
 
-    TypeScriptSession.prototype._handleDocumentChange = function (event, changedDoc, changes) {
-        this.tsDoc.updateScriptWithChanges(changedDoc, changes);
-        
-        //TODO: scan references
-        
+    /**
+     * Updates this TypeScriptDocument's script contents with the given changes.
+     * @param event
+     * @param {!Document} doc This document
+     * @param {!{from:number, to:number, text:string, next:{from:number, to:number, text:string}}} changes
+     * @private
+     */
+    TypeScriptSession.prototype._handleDocumentChange = function (event, doc, changes) {
+        //TODO: watch the top of the file for references changes
+        this.tsDoc.updateScriptWithChanges(doc, changes);
         this.tsDoc.triggerHandlerChange();
     };
 
+    /**
+     * Adds and processes the given document as a script in this TypeScriptDocument and
+     * start listen to the document change event to update the script contents
+     * automatically while this Session is active.
+     * @param {!Document} doc This document or a referenced one
+     * @param {!function(*, Document, {from:number, to:number, text:string, next:{from:number, to:number, text:string}})} handleChangeFn
+     * @private
+     */
     TypeScriptSession.prototype._attachDocument = function (doc, handleChangeFn) {
         $(doc).on(TypeScriptUtils.eventName("change"), handleChangeFn);
 
         //TODO: referenceDoc.releaseRef()  when reference changed/deleted
-        //TODO: Question: must do it after deleted event of document or not?
+        //TODO: Must do it after deleted event of document or not?
         doc.addRef();
 
         this.tsDoc.updateScriptWithText(doc);
-
         console.log("Script loaded: ", doc.file.fullPath);
     };
 
-    TypeScriptSession.prototype._attachAllReferencedDocument = function () {
+    /**
+     * Attaches and processes all the referenced documents by this TypeScriptDocument.
+     * See _attachDocument documentation.
+     * @returns {$.Promise} A promise object that will be resolved with this
+     *      TypeScriptDocument when all referenced documents has been processed.
+     * @private
+     */
+    TypeScriptSession.prototype._attachAllReferencedDocuments = function () {
         var that = this,
             result = new $.Deferred(),
             references = this.tsDoc.getReferences();
@@ -111,14 +124,15 @@ define(function (require, exports, module) {
         Async.doInParallel(references, function (relativePath) {
             var oneResult = new $.Deferred(),
                 parentPath = PathUtils.getParentPath(that.tsDoc.doc.file.fullPath),
-                // WARNING: won't work with parent relative path
-                fullPath = PathUtils.getFullPathFromRelative(relativePath, parentPath);
+                // WARNING: won't work with parent relative path for the moment
+                fullPath = PathUtils.convertRelativePathToFullPath(relativePath, parentPath);
             
             console.log("Start loading script: ", fullPath);
 
             DocumentManager.getDocumentForPath(fullPath)
                 .done(function (referencedDoc) {
-                    that._attachDocument(referencedDoc, that._handleReferencedDocumentChange.bind(that));
+                    that._attachDocument(referencedDoc,
+                                         that._handleReferencedDocumentChange.bind(that));
                 })
                 .always(function () {
                     oneResult.resolve();
@@ -126,7 +140,7 @@ define(function (require, exports, module) {
 
             return oneResult.promise();
         }).done(function () {
-            result.resolve(this.tsDoc);
+            result.resolve(that.tsDoc);
         });
         
         return result;

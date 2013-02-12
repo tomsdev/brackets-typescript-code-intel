@@ -151,9 +151,6 @@ define(function (require, exports, module) {
     
     describe("TypeScript Quick Edit", function () {
 
-        /*
-         * 
-         */
         describe("typeScriptFunctionProvider", function () {
 
             beforeEach(function () {

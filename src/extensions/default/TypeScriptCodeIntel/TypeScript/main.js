@@ -56,7 +56,7 @@ define(function (require, exports, module) {
     //             }
 
     //             if (symbol.declAST.preComments && symbol.declAST.preComments.length > 0) {
-    //                 // todo: get other comments line in the array
+    //                 // todo: get other comments lines in the array
     //                 // bug: no comments when it's a class method
     //                 info.declComments = symbol.declAST.preComments[0].content;
     //             }

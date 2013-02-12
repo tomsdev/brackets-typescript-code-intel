@@ -42,6 +42,6 @@ define(function (require, exports, module) {
     }
 
     // Define public API
-    exports.MODE_NAME               = MODE_NAME;
-    exports.eventName               = eventName;
+    exports.MODE_NAME = MODE_NAME;
+    exports.eventName = eventName;
 });

@@ -25,22 +25,33 @@
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50, regexp: true */
 /*global define, brackets, $ */
 
-//TODO: merge this functions in brackets (in file/FileUtils.js)
+//TODO: merge these functions in brackets (in file/FileUtils.js)
 define(function (require, exports, module) {
     "use strict";
 
-    function getFullPathFromRelative(relativePath, directoryPath) {
-        //TODO: handle parent relative path (with ../)
+    /**
+     * Converts a relative path to a full path based on the given directory path.
+     * @param {!string} relativePath
+     * @param {!string} directoryPath
+     * @returns {string}
+     */
+    function convertRelativePathToFullPath(relativePath, directoryPath) {
+        //TODO: handle parent relative path (starting with ../)
         var fullPath = directoryPath + "/" + relativePath;
         console.log("FullPath calculated: ", fullPath);
         return fullPath;
     }
 
-    function getParentPath(filePath) {
-        return filePath.substr(0, filePath.lastIndexOf('/'));
+    /**
+     * Return the parent path of the given path.
+     * @param {!string} path
+     * @returns {string}
+     */
+    function getParentPath(path) {
+        return path.substr(0, path.lastIndexOf('/'));
     }
 
     // Define public API
-    exports.getFullPathFromRelative = getFullPathFromRelative;
-    exports.getParentPath           = getParentPath;
+    exports.convertRelativePathToFullPath = convertRelativePathToFullPath;
+    exports.getParentPath                 = getParentPath;
 });

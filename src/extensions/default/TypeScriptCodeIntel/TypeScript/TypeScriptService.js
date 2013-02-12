@@ -25,15 +25,6 @@
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50, regexp: true */
 /*global define, brackets, $ */
 
-/**
-* DocumentManager maintains a list of currently 'open' Documents. It also owns the list of files in
-* the working set, and the notion of which Document is currently shown in the main editor UI area.
-*
-* This module dispatches several events:
-*
-*    - dirtyFlagChange -- When any Document's isDirty flag changes. The 2nd arg to the listener is the
-*      Document whose flag changed.
-*/
 define(function (require, exports, module) {
     "use strict";
 
@@ -45,12 +36,18 @@ define(function (require, exports, module) {
         TypeScriptSession      = require("TypeScript/TypeScriptSession").TypeScriptSession;
 
     /**
+     * All sessions in cache. Maps Document.file.fullPath -> TypeScriptSession.
+     * TODO: limit the cache
+     * @type {Object.<string, TypeScriptSession>}
      * @private
-     * All documents with refCount > 0. Maps Document.file.fullPath -> Document.
-     * @type {Object.<string, Document>}
      */
     var _sessions = {};
 
+    /**
+     * Current active session.
+     * @type {TypeScriptSession}
+     * @private
+     */
     var _currentSession;
 
     // return a synchronized tsDoc for the given doc
@@ -112,44 +109,44 @@ define(function (require, exports, module) {
         return result;
     }
 
-    /** Get the current active session */
+    /**
+     * Returns the current active session.
+     * @returns {TypeScriptSession}
+     */
     function getCurrentSession() {
         return _currentSession;
     }
 
-    /*
-     * When the editor is changed, reset the hinting session and cached 
-     * information, and reject any pending deferred requests.
+    /**
+     * When the active editor is changed, change the current active session to its
+     * document if it's a typescript file. Create the session if needed.
+     * @param event
+     * @param {?Editor} current
+     * @param {?Editor} previous
      */
     function handleActiveEditorChange(event, current, previous) {
         if (!current || (previous &&
                          current.document.file.fullPath === previous.document.file.fullPath)) {
             return;
         }
-        
-        //TODO: updatescript si une/des references sont ajouté/supprimé dans le fichier courant!
-        
-//        if (_currentSyncDocument && previous) {
-//            ////_currentSession.uninstallEditorListeners(previous);
-//        }
+        // Here we could detach the session from the previous editor
+        //if (_currentSession && previous) { }
         
         if (current.getModeForSelection() === TypeScriptUtils.MODE_NAME) {
-            var currentDoc = current.document;
-            console.log("Current session change to: ", currentDoc.file.fullPath);
-            
-            //TODO: async? if null?
-            _currentSession = getSession(currentDoc);
-            ////_currentSession.installEditorListeners(current);
+            console.log("Current session change to: ", current.document.file.fullPath);
+            //TODO: do it async?
+            _currentSession = getSession(current.document);
         } else {
             _currentSession = null;
         }
     }
 
+    // Listen for activeEditorChange event
     $(EditorManager).on(TypeScriptUtils.eventName("activeEditorChange"), handleActiveEditorChange);
 
     // Define public API
-    exports.get                = get;
-    exports.getAsync           = getAsync;
-    exports.getFromPathAsync   = getFromPathAsync;
-    exports.getCurrentSession  = getCurrentSession;
+    exports.get               = get;
+    exports.getAsync          = getAsync;
+    exports.getFromPathAsync  = getFromPathAsync;
+    exports.getCurrentSession = getCurrentSession;
 });

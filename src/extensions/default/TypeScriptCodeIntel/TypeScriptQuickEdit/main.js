@@ -73,7 +73,7 @@ define(function (require, exports, module) {
     
     /**
      * This function is registered with EditorManager as an inline editor provider. It creates an inline editor
-     * when the cursor is on a JavaScript function name, finds all functions that match the name
+     * when the cursor is on a TypeScript function name, finds all functions that match the name
      * and shows (one/all of them) in an inline editor.
      *
      * @param {!Editor} editor
@@ -93,7 +93,7 @@ define(function (require, exports, module) {
             return null;
         }
 
-        //TODO: async? null?
+        //TODO: do it async?
         var hostTsDoc = TypeScriptService.get(hostEditor.document);
         var symbol = hostTsDoc.getSymbolAtPosition(sel.start);
         var declInfo = hostTsDoc.getDeclarationInfo(symbol);
