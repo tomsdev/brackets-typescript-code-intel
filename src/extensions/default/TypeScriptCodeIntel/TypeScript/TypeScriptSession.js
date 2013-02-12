@@ -37,12 +37,18 @@ define(function (require, exports, module) {
 
     /**
      * @constructor
+     * Session that maintain a given TypeScriptDocument's scripts up to date.
+     * It listens to the document's change event and its references documents's change
+     * events to update the scripts.
+     * When the current document change, it also check if references have been added
+     * or removed.
      *
-     *
-     * @param {!Document} tsDoc
+     * @param {!TypeScriptDocument} tsDoc TypeScriptDocument that will be maintain up
+     *                                    to date by this session
      */
     function TypeScriptSession(tsDoc) {
         this.tsDoc = tsDoc;
+        this._attachedDocuments = {};
     }
 
     /**
@@ -50,6 +56,13 @@ define(function (require, exports, module) {
      * @type {!TypeScriptDocument}
      */
     TypeScriptSession.prototype.tsDoc = null;
+
+    /**
+     * All documents attached. Maps Document.file.fullPath -> Document.
+     * @private
+     * @type {Object.<string, Document>}
+     */
+    TypeScriptSession.prototype._attachedDocuments = null;
 
     /**
      * Adds, processes and attaches all the scripts contents for this TypeScriptDocument
@@ -60,8 +73,10 @@ define(function (require, exports, module) {
     TypeScriptSession.prototype.init = function () {
         // Attach this document
         this._attachDocument(this.tsDoc.doc, this._handleDocumentChange.bind(this));
+        // Get references for this document
+        var references = this.tsDoc.getReferences().all;
         // Attach referenced documents and return a promise
-        return this._attachAllReferencedDocuments();
+        return this._attachReferencedDocuments(references);
     };
 
     /**
@@ -69,7 +84,8 @@ define(function (require, exports, module) {
      * the given referenced document.
      * @param event
      * @param {!Document} referencedDoc A referenced document
-     * @param {!{from:number, to:number, text:string, next:{from:number, to:number, text:string}}} changes
+     * @param {{from:{line: number, ch: number}, to:{line: number, ch: number},
+     *          text:string, next}} changes
      * @private
      */
     TypeScriptSession.prototype._handleReferencedDocumentChange = function (event, referencedDoc, changes) {
@@ -78,71 +94,113 @@ define(function (require, exports, module) {
     };
 
     /**
-     * Updates this TypeScriptDocument's script contents with the given changes.
+     * Updates this TypeScriptDocument's script contents with the given changes and
+     * check if references have been added or removed.
      * @param event
      * @param {!Document} doc This document
-     * @param {!{from:number, to:number, text:string, next:{from:number, to:number, text:string}}} changes
+     * @param {{from:{line: number, ch: number}, to:{line: number, ch: number},
+     *          text:string, next}} changes
      * @private
      */
     TypeScriptSession.prototype._handleDocumentChange = function (event, doc, changes) {
-        //TODO: watch the top of the file for references changes
+        //TODO: do it only when the change is at the top of the file (before the first line of code)
+        var references = this.tsDoc.getReferences(),
+            that = this;
+
+        // Attach added references
+        if (references.added.length > 0) {
+            this._attachReferencedDocuments(references.added);
+        }
+
+        // Detach removed references
+        references.removed.forEach(function (relativePath) {
+            var fullPath = that.tsDoc.getFullPath(relativePath);
+            var doc = that._attachedDocuments[fullPath];
+            that._detachDocument(doc);
+        });
+
         this.tsDoc.updateScriptWithChanges(doc, changes);
         this.tsDoc.triggerHandlerChange();
     };
 
     /**
      * Adds and processes the given document as a script in this TypeScriptDocument and
-     * start listen to the document change event to update the script contents
+     * start listening to the document's change event to update the script contents
      * automatically while this Session is active.
      * @param {!Document} doc This document or a referenced one
-     * @param {!function(*, Document, {from:number, to:number, text:string, next:{from:number, to:number, text:string}})} handleChangeFn
+     * @param {!function(*, Document, {from:{line: number, ch: number},
+     *          to:{line: number, ch: number}, text:string, next})} handleChangeFn
      * @private
      */
     TypeScriptSession.prototype._attachDocument = function (doc, handleChangeFn) {
-        $(doc).on(TypeScriptUtils.eventName("change"), handleChangeFn);
+        if (this._attachedDocuments[doc.file.fullPath]) {
+            console.error("Document for this path already in _attachedDocuments: ", doc.file.fullPath);
+            return;
+        }
 
-        //TODO: referenceDoc.releaseRef()  when reference changed/deleted
-        //TODO: Must do it after deleted event of document or not?
         doc.addRef();
+        $(doc).on(TypeScriptUtils.eventName("change"), handleChangeFn);
+        this._attachedDocuments[doc.file.fullPath] = doc;
 
         this.tsDoc.updateScriptWithText(doc);
-        console.log("Script loaded: ", doc.file.fullPath);
+        console.log("Script attached: ", doc.file.fullPath);
     };
 
     /**
-     * Attaches and processes all the referenced documents by this TypeScriptDocument.
+     * Remove the given document script from this TypeScriptDocument and stop listening
+     * to the document's change event.
+     * @param {!Document} doc This document or a referenced one
+     * @private
+     */
+    TypeScriptSession.prototype._detachDocument = function (doc) {
+        $(doc).off(TypeScriptUtils.eventName("change"));
+        delete this._attachedDocuments[doc.file.fullPath];
+
+        this.tsDoc.removeScript(doc);
+        console.log("Script detached: ", doc.file.fullPath);
+
+        //TODO: do it also after deleted event of this document or not?
+        doc.releaseRef();
+    };
+
+    /**
+     * Attaches and processes the referenced document at the given relative path.
+     * See _attachDocument documentation.
+     * @returns {$.Promise} A promise object that will be resolved with this
+     *      TypeScriptDocument when the referenced document has been processed.
+     * @private
+     */
+    TypeScriptSession.prototype._attachReferencedDocument = function (relativePath) {
+        var that = this,
+            result = new $.Deferred(),
+            fullPath = this.tsDoc.getFullPath(relativePath);
+
+        console.log("Start loading script: ", fullPath);
+        DocumentManager.getDocumentForPath(fullPath)
+            .done(function (referencedDoc) {
+                that._attachDocument(referencedDoc,
+                    that._handleReferencedDocumentChange.bind(that));
+                result.resolve(that.tsDoc);
+            });
+        return result;
+    };
+
+    /**
+     * Attaches and processes all the referenced documents.
      * See _attachDocument documentation.
      * @returns {$.Promise} A promise object that will be resolved with this
      *      TypeScriptDocument when all referenced documents has been processed.
      * @private
      */
-    TypeScriptSession.prototype._attachAllReferencedDocuments = function () {
+    TypeScriptSession.prototype._attachReferencedDocuments = function (relativePaths) {
         var that = this,
-            result = new $.Deferred(),
-            references = this.tsDoc.getReferences();
+            result = new $.Deferred();
 
-        Async.doInParallel(references, function (relativePath) {
-            var oneResult = new $.Deferred(),
-                parentPath = PathUtils.getParentPath(that.tsDoc.doc.file.fullPath),
-                // WARNING: won't work with parent relative path for the moment
-                fullPath = PathUtils.convertRelativePathToFullPath(relativePath, parentPath);
-            
-            console.log("Start loading script: ", fullPath);
-
-            DocumentManager.getDocumentForPath(fullPath)
-                .done(function (referencedDoc) {
-                    that._attachDocument(referencedDoc,
-                                         that._handleReferencedDocumentChange.bind(that));
-                })
-                .always(function () {
-                    oneResult.resolve();
-                });
-
-            return oneResult.promise();
+        Async.doInParallel(relativePaths, function (relativePath) {
+            return that._attachReferencedDocument(relativePath).promise();
         }).done(function () {
             result.resolve(that.tsDoc);
         });
-        
         return result;
     };
 

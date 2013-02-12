@@ -30,34 +30,39 @@ define(function (require, exports, module) {
 
     require("TypeScript/thirdparty/ServiceBuilder");
     
-    var TypeScriptUtils = require("TypeScript/TypeScriptUtils");
-    
+    var TypeScriptUtils = require("TypeScript/TypeScriptUtils"),
+        PathUtils       = require("PathUtils");
+
     /**
-     * Reference matching regular expression. Recognizes the forms:
+     * Returns a reference matching regular expression. Recognizes the forms:
      * ///<reference path='file.ts'/>
      * ///<reference path="file.ts"/>
      *
      * @type {RegExp}
      */
-    var _referenceRegExp = /^\s*\/\/\/\s*<\s*reference\s+path\s*=\s*[""""']([^""""<>|]+)[""""']\s*\/>/gim;
+    function getReferenceRegExp() {
+        return /^\s*\/\/\/\s*<\s*reference\s+path\s*=\s*[""""']([^""""<>|]+)[""""']\s*\/>/gim;
+    }
 
     /**
-     * Extract references from the contents of a typescript file.
+     * Extracts references from the contents of a typescript file and returns an
+     * hash table (JavaScript object) with the relative path of each reference as
+     * property.
      * @param {!string} content Content of the file
-     * @returns {Array.<string>} Array of relative paths
+     * @returns {Object.<string, *>} Hash table of relative paths
      */
     function _extractReferences(content) {
-        var relativePaths = [],
+        var referencesObj = {},
+            regExp = getReferenceRegExp(),
             match,
             relativePath;
 
-        while ((match = _referenceRegExp.exec(content)) !== null) {
+        while ((match = regExp.exec(content)) !== null) {
             relativePath = match[1];
-            console.log("Reference found: ", relativePath);
-            relativePaths.push(relativePath);
+            referencesObj[relativePath] = 1; // value is not used
         }
 
-        return relativePaths;
+        return referencesObj;
     }
 
     /**
@@ -122,6 +127,15 @@ define(function (require, exports, module) {
     TypeScriptDocument.prototype._references = null;
 
     /**
+     * The cached references extracted from the contents of this document as an
+     * hash table (JavaScript object) with the relative path of each reference as
+     * property.
+     * @type {!Object.<string, *>} Hash table of relative paths
+     * @private
+     */
+    TypeScriptDocument.prototype._referencesObj = null;
+
+    /**
      * Converts a typescript index position to a brackets position from the document
      * identify by the given script name.
      * @param {!number} index Index position
@@ -159,6 +173,17 @@ define(function (require, exports, module) {
      */
     TypeScriptDocument.prototype.getIndexFromPos = function (pos, doc) {
         return this.lsh.lineColToPosition(getScriptName(doc), pos.line + 1, pos.ch + 1);
+    };
+
+    /**
+     * Returns the full path based on this document directory and the given relative path.
+     * @param {!string} relativePath
+     * @returns {string}
+     */
+    TypeScriptDocument.prototype.getFullPath = function (relativePath) {
+        var parentPath = PathUtils.getParentPath(this.doc.file.fullPath);
+        // WARNING: won't work with parent relative path for the moment
+        return PathUtils.convertRelativePathToFullPath(relativePath, parentPath);
     };
 
     /**
@@ -243,13 +268,40 @@ define(function (require, exports, module) {
     };
 
     /**
-     * Extracts and returns the references from the contents of this document.
-     * @returns {Array.<string>}
+     * Extracts and returns the current references from the contents of this document.
+     * If there was other references before, it provides also the added and removed ones.
+     * @returns {{references: Array.<string>, added: Array.<string>, removed: Array.<string>}}
      */
     TypeScriptDocument.prototype.getReferences = function () {
-        //TODO: maintain the cache updated
-        this._references = _extractReferences(this.getText());
-        return this._references;
+        var referencesObj = _extractReferences(this.getText());
+        var result = {
+            all: TypeScriptUtils.getObjectKeys(referencesObj),
+            added: null,
+            removed: null
+        };
+        // Replace the cached array
+        this._references = result.all;
+        // If there is references in cache, do a diff with them
+        if (this._referencesObj) {
+            var diff = TypeScriptUtils.getObjectsDiff(this._referencesObj, referencesObj);
+            result.added = diff.added;
+            result.removed = diff.removed;
+
+            result.added.forEach(function (relativePath) {
+                console.log("Reference added: ", relativePath);
+            });
+
+            result.removed.forEach(function (relativePath) {
+                console.log("Reference removed: ", relativePath);
+            });
+        } else {
+            result.all.forEach(function (relativePath) {
+                console.log("Reference found: ", relativePath);
+            });
+        }
+        // Replace the cached object
+        this._referencesObj = referencesObj;
+        return result;
     };
 
     /**
@@ -265,10 +317,29 @@ define(function (require, exports, module) {
     };
 
     /**
-     * Updates the document content in the corresponding typescript script with
+     * Removes the corresponding typescript script.
+     * @param {!Document} doc This document or a referenced one
+     */
+    TypeScriptDocument.prototype.removeScript = function (doc) {
+        var scriptName = getScriptName(doc);
+        for (var i=0; i < this.lsh.scripts.length; i++) {
+            // Find the script
+            if (this.lsh.scripts[i].name === scriptName) {
+                // Remove it
+                this.lsh.scripts.splice(i, 1);
+                // We have to update typescript language service when a script is removed
+                this.langSvc = this.lsh.getLanguageService();
+                return;
+            }
+        }
+    };
+
+    /**
+     * Updates the typescript script content corresponding to the given document with
      * the given change.
      * @param {!Document} doc This document or a referenced one
-     * @param {!{from:number, to:number, text:string}} change
+     * @param {{from:{line: number, ch: number}, to:{line: number, ch: number},
+     *          text:string}} change
      */
     TypeScriptDocument.prototype.updateScriptWithChange = function (doc, change) {
         // Special case: the range is no longer meaningful since the entire text was replaced
@@ -284,10 +355,11 @@ define(function (require, exports, module) {
     };
 
     /**
-     * Updates the document content in the corresponding typescript script with
+     * Updates the typescript script content corresponding to the given document with
      * the given changes.
      * @param {!Document} doc This document or a referenced one
-     * @param {!{from:number, to:number, text:string, next:{from:number, to:number, text:string}}} changes
+     * @param {{from:{line: number, ch: number}, to:{line: number, ch: number},
+     *          text:string, next}} changes
      */
     TypeScriptDocument.prototype.updateScriptWithChanges = function (doc, changes) {
         while (changes) {
@@ -308,4 +380,5 @@ define(function (require, exports, module) {
     // Define public API
     exports.TypeScriptDocument = TypeScriptDocument;
     exports.getScriptName      = getScriptName;
+    exports.getReferenceRegExp = getReferenceRegExp;
 });

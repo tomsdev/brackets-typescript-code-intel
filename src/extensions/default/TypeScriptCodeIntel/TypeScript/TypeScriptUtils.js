@@ -25,15 +25,12 @@
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50, regexp: true */
 /*global define, brackets, $ */
 
-/**
-* TODO: merge in brackets (in file/FileUtils.js?)
-*/
 define(function (require, exports, module) {
     "use strict";
     
     var MODE_NAME = "typescript";
     
-    /*
+    /**
      * Get a typescript-specific event name
      */
     function eventName(name) {
@@ -41,7 +38,52 @@ define(function (require, exports, module) {
         return name + "." + EVENT_TAG;
     }
 
+    /**
+     * Returns the elements added and removed between the given previous and current
+     * objects.
+     * Note: The objects should be hash tables.
+     * @param {Object} previous
+     * @param {Object} current
+     * @returns {{added: Array.<string>, removed: Array.<string>}}
+     */
+    function getObjectsDiff(previous, current) {
+        var added = [],
+            removed = [];
+
+        for (var i in current) {
+            if (i in previous) {
+                delete previous[i];
+            }
+            else {
+                added.push(i);
+            }
+        }
+
+        for (var i in previous) {
+            removed.push(i);
+        }
+        return {added: added, removed: removed};
+    }
+
+    /**
+     * Returns the object properties as an array.
+     * @param {Object} obj
+     * @returns {Array.<string>}
+     */
+    function getObjectKeys(obj) {
+        var array = [],
+            key;
+        for (key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                array.push(key);
+            }
+        }
+        return array;
+    }
+
     // Define public API
-    exports.MODE_NAME = MODE_NAME;
-    exports.eventName = eventName;
+    exports.MODE_NAME      = MODE_NAME;
+    exports.eventName      = eventName;
+    exports.getObjectsDiff = getObjectsDiff;
+    exports.getObjectKeys  = getObjectKeys;
 });
