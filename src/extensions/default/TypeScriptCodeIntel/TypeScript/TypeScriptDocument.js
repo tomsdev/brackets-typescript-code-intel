@@ -168,10 +168,11 @@ define(function (require, exports, module) {
     /**
      * Converts a brackets position to a typescript index position from the document.
      * @param {!{line:number, ch:number}} pos Brackets position
-     * @param {!Document} doc This document or a referenced one
+     * @param {Document=} doc This document or a referenced one. By default, this document.
      * @returns {*}
      */
     TypeScriptDocument.prototype.getIndexFromPos = function (pos, doc) {
+        doc = doc || this.doc;
         return this.lsh.lineColToPosition(getScriptName(doc), pos.line + 1, pos.ch + 1);
     };
 

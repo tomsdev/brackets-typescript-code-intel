@@ -50,22 +50,12 @@ define(function (require, exports, module) {
      */
     var _currentSession;
 
-    // return a synchronized tsDoc for the given doc
-    // warning: it doesn't wait for the tsDoc to be ready
-    function get(doc) {
-        var session = _sessions[doc.file.fullPath];
-        // if the doc is not in the cache, create it
-        if (!session) {
-            var tsDoc = new TypeScriptDocument(doc);
-            session = new TypeScriptSession(tsDoc);
-            session.init();
-            _sessions[doc.file.fullPath] = session;
-        }
-        return session.tsDoc;
-    }
-    
-    // return a synchronized tsDoc for the given doc
-    // warning: it doesn't wait for the tsDoc to be ready
+    /**
+     * Returns a session associated to the given document and create
+     * it if needed.
+     * @param {!Document} doc
+     * @returns {TypeScriptSession}
+     */
     function getSession(doc) {
         var session = _sessions[doc.file.fullPath];
         // if the doc is not in the cache, create it
@@ -79,7 +69,7 @@ define(function (require, exports, module) {
     }
     
     // return a synchronized tsDoc for the given doc
-    function getAsync(doc) {
+    function getSessionAsync(doc) {
         var session = _sessions[doc.file.fullPath],
             result;
         // if the doc is not in the cache, create it
@@ -90,19 +80,19 @@ define(function (require, exports, module) {
             _sessions[doc.file.fullPath] = session;
         } else {
             result = new $.Deferred();
-            result.resolve(session.tsDoc);
+            result.resolve(session);
         }
         return result;
     }
     
     // return a synchronized tsDoc for the doc at the given fullPath
-    function getFromPathAsync(fullPath) {
+    function getSessionFromPathAsync(fullPath) {
         var result = new $.Deferred();
         
         DocumentManager.getDocumentForPath(fullPath)
             .done(function (doc) {
-                getAsync(doc).done(function (tsDoc) {
-                    result.resolve(tsDoc);
+                getSessionAsync(doc).done(function (session) {
+                    result.resolve(session);
                 });
             });
         
@@ -145,8 +135,8 @@ define(function (require, exports, module) {
     $(EditorManager).on(TypeScriptUtils.eventName("activeEditorChange"), handleActiveEditorChange);
 
     // Define public API
-    exports.get               = get;
-    exports.getAsync          = getAsync;
-    exports.getFromPathAsync  = getFromPathAsync;
-    exports.getCurrentSession = getCurrentSession;
+    exports.getSession               = getSession;
+    exports.getSessionAsync          = getSessionAsync;
+    exports.getSessionFromPathAsync  = getSessionFromPathAsync;
+    exports.getCurrentSession        = getCurrentSession;
 });

@@ -94,7 +94,7 @@ define(function (require, exports, module) {
         }
 
         //TODO: do it async?
-        var hostTsDoc = TypeScriptService.get(hostEditor.document);
+        var hostTsDoc = TypeScriptService.getSession(hostEditor.document).tsDoc;
         var symbol = hostTsDoc.getSymbolAtPosition(sel.start);
         var declInfo = hostTsDoc.getDeclarationInfo(symbol);
         

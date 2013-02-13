@@ -91,14 +91,13 @@ define(function (require, exports, module) {
      * Returns the completion entries given by typescript and some information about
      * the completion.
      * @param {!{line:number, ch:number}} pos Position where the completion happens
-     * @param {!Document} doc Document where the completion happens
+     * @param {!TypeScriptDocument} doc Document where the completion happens
      * @returns {{entries: Array, info: {index: number, isMember: boolean, currentText: string}}}
      * @private
      */
-    function _getCompletionAtPosition(pos, doc) {
-        var tsDoc = TypeScriptService.get(doc),
-            index = tsDoc.getIndexFromPos(pos, doc),
-            textBefore = doc.getRange({line: 0, ch: 0}, pos),
+    function _getCompletionAtPosition(pos, tsDoc) {
+        var index = tsDoc.getIndexFromPos(pos),
+            textBefore = tsDoc.doc.getRange({line: 0, ch: 0}, pos),
             info = _getCompletionInfo(textBefore, index),
             completions = tsDoc.getCompletionsAtIndex(info.index, info.isMember);
         return {
@@ -293,36 +292,38 @@ define(function (require, exports, module) {
 	 *    selected by default in the hint list window.
 	 */
     TsHints.prototype.getHints = function (implicitChar) {
-        var that = this;
+        var that = this,
+            result = new $.Deferred(),
+            hints;
 
         /**
          * Return a list of hints for the current editor context.
          */
-        function _getHints(implicitChar) {
+        function _getHints(tsDoc) {
             var completion = _getCompletionAtPosition(that.editor.getCursorPos(),
-                                                      that.editor.document);
+                                                      tsDoc);
             // Store the text that was already typed
             that.currentText = completion.info.currentText;
             return _getResponse(completion.entries, completion.info.currentText);
         }
 
-        if (implicitChar) {
-            var result = new $.Deferred(),
-                tsDoc = TypeScriptService.get(this.editor.document);
-            
-            // wait for the current typescript document "change" event because typescript
-            // has to process the file with the changes before getting the completions
-            $(tsDoc).on(eventName("change"), function () {
-                $(tsDoc).off(eventName("change"));
-
-                var hints = _getHints(implicitChar);
+        TypeScriptService.getSessionAsync(this.editor.document).done(function (session) {
+            var tsDoc = session.tsDoc;
+            // if the user typed something that changed the current document
+            if (implicitChar) {
+                // wait for the current typescript document "change" event because typescript
+                // has to process the file with the changes before getting the completions
+                $(tsDoc).on(eventName("change"), function () {
+                    $(tsDoc).off(eventName("change"));
+                    hints = _getHints(tsDoc);
+                    result.resolve(hints);
+                });
+            } else {
+                hints = _getHints(tsDoc);
                 result.resolve(hints);
-            }.bind(this));
-            
-            return result;
-        } else {
-            return _getHints(implicitChar);
-        }
+            }
+        });
+        return result;
     };
 
 	/**
