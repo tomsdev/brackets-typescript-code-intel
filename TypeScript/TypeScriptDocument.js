@@ -374,7 +374,6 @@ define(function (require, exports, module) {
      * Trigger the change event of this TypeScriptDocument.
      */
     TypeScriptDocument.prototype.triggerHandlerChange = function () {
-        console.log("Content change: ", this.scriptName);
         $(this).triggerHandler("change");
     };
     

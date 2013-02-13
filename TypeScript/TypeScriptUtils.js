@@ -28,7 +28,7 @@
 define(function (require, exports, module) {
     "use strict";
     
-    var MODE_NAME = "typescript";
+    var MODE_NAME = "text/typescript";
     
     /**
      * Get a typescript-specific event name
