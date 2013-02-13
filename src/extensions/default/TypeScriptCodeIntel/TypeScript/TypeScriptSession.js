@@ -68,7 +68,7 @@ define(function (require, exports, module) {
      * Adds, processes and attaches all the scripts contents for this TypeScriptDocument
      * and its references.
      * @returns {$.Promise} A promise object that will be resolved with this
-     *      TypeScriptDocument when all referenced documents has been processed.
+     *      TypeScriptSession when all referenced documents has been processed.
      */
     TypeScriptSession.prototype.init = function () {
         // Attach this document
@@ -167,7 +167,7 @@ define(function (require, exports, module) {
      * Attaches and processes the referenced document at the given relative path.
      * See _attachDocument documentation.
      * @returns {$.Promise} A promise object that will be resolved with this
-     *      TypeScriptDocument when the referenced document has been processed.
+     *      TypeScriptSession when the referenced document has been processed.
      * @private
      */
     TypeScriptSession.prototype._attachReferencedDocument = function (relativePath) {
@@ -180,7 +180,7 @@ define(function (require, exports, module) {
             .done(function (referencedDoc) {
                 that._attachDocument(referencedDoc,
                     that._handleReferencedDocumentChange.bind(that));
-                result.resolve(that.tsDoc);
+                result.resolve();
             });
         return result;
     };
@@ -199,7 +199,7 @@ define(function (require, exports, module) {
         Async.doInParallel(relativePaths, function (relativePath) {
             return that._attachReferencedDocument(relativePath).promise();
         }).done(function () {
-            result.resolve(that.tsDoc);
+            result.resolve(that);
         });
         return result;
     };

@@ -48,28 +48,14 @@ define(function (require, exports, module) {
      * @type {TypeScriptSession}
      * @private
      */
-    var _currentSession;
+    var _currentSession = null;
 
     /**
-     * Returns a session associated to the given document and create
-     * it if needed.
+     * Returns a session associated to the given document and creates it if needed.
      * @param {!Document} doc
-     * @returns {TypeScriptSession}
+     * @returns {$.Promise} A promise object that will be resolved with the session
      */
     function getSession(doc) {
-        var session = _sessions[doc.file.fullPath];
-        // if the doc is not in the cache, create it
-        if (!session) {
-            var tsDoc = new TypeScriptDocument(doc);
-            session = new TypeScriptSession(tsDoc);
-            session.init();
-            _sessions[doc.file.fullPath] = session;
-        }
-        return session;
-    }
-    
-    // return a synchronized tsDoc for the given doc
-    function getSessionAsync(doc) {
         var session = _sessions[doc.file.fullPath],
             result;
         // if the doc is not in the cache, create it
@@ -84,18 +70,21 @@ define(function (require, exports, module) {
         }
         return result;
     }
-    
-    // return a synchronized tsDoc for the doc at the given fullPath
-    function getSessionFromPathAsync(fullPath) {
+
+    /**
+     * Returns a session associated to the given full path and creates it if needed.
+     * @param {!Document} doc
+     * @returns {$.Promise} A promise object that will be resolved with the session
+     */
+    function getSessionFromPath(fullPath) {
         var result = new $.Deferred();
         
         DocumentManager.getDocumentForPath(fullPath)
             .done(function (doc) {
-                getSessionAsync(doc).done(function (session) {
+                getSession(doc).done(function (session) {
                     result.resolve(session);
                 });
             });
-        
         return result;
     }
 
@@ -114,29 +103,30 @@ define(function (require, exports, module) {
      * @param {?Editor} current
      * @param {?Editor} previous
      */
-    function handleActiveEditorChange(event, current, previous) {
+    function _handleActiveEditorChange(event, current, previous) {
         if (!current || (previous &&
                          current.document.file.fullPath === previous.document.file.fullPath)) {
             return;
         }
         // Here we could detach the session from the previous editor
         //if (_currentSession && previous) { }
-        
+
+        _currentSession = null;
         if (current.getModeForSelection() === TypeScriptUtils.MODE_NAME) {
-            console.log("Current session change to: ", current.document.file.fullPath);
-            //TODO: do it async?
-            _currentSession = getSession(current.document);
-        } else {
-            _currentSession = null;
+            console.log("Current session changing to: ", current.document.file.fullPath);
+
+            getSession(current.document).done(function (session) {
+                console.log("Current session changed to: ", current.document.file.fullPath);
+                _currentSession = session;
+            });
         }
     }
 
     // Listen for activeEditorChange event
-    $(EditorManager).on(TypeScriptUtils.eventName("activeEditorChange"), handleActiveEditorChange);
+    $(EditorManager).on(TypeScriptUtils.eventName("activeEditorChange"), _handleActiveEditorChange);
 
     // Define public API
-    exports.getSession               = getSession;
-    exports.getSessionAsync          = getSessionAsync;
-    exports.getSessionFromPathAsync  = getSessionFromPathAsync;
-    exports.getCurrentSession        = getCurrentSession;
+    exports.getSession          = getSession;
+    exports.getSessionFromPath  = getSessionFromPath;
+    exports.getCurrentSession   = getCurrentSession;
 });

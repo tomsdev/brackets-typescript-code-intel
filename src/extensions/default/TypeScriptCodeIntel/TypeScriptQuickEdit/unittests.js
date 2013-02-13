@@ -23,7 +23,7 @@
 
 
 /*jslint vars: true, plusplus: true, devel: true, browser: true, nomen: true, indent: 4, maxerr: 50 */
-/*global define, describe, it, xit, expect, beforeEach, afterEach, waitsFor, runs, $, brackets, waitsForDone */
+/*global define, describe, it, xit, expect, beforeEach, afterEach, waitsFor, runs, $, brackets, waitsForDone, waitsForFail */
 
 define(function (require, exports, module) {
     "use strict";
@@ -37,7 +37,8 @@ define(function (require, exports, module) {
         FileUtils           = brackets.getModule("file/FileUtils"),
         NativeFileSystem    = brackets.getModule("file/NativeFileSystem").NativeFileSystem,
         SpecRunnerUtils     = brackets.getModule("spec/SpecRunnerUtils"),
-        UnitTestReporter    = brackets.getModule("test/UnitTestReporter");
+        UnitTestReporter    = brackets.getModule("test/UnitTestReporter"),
+        TypeScriptQuickEdit = require("TypeScriptQuickEdit/main");
 
     var extensionPath = FileUtils.getNativeModuleDirectoryPath(module),
         testPath = extensionPath + "/unittest-files/syntax",
@@ -100,7 +101,7 @@ define(function (require, exports, module) {
             var typeScriptService = extensionRequire("main").TypeScript.TypeScriptService;
             var fullPath = testPath + "/" + openFile;
             
-            waitsForDone(typeScriptService.getFromPathAsync(fullPath), "getFromPathAsync");
+            waitsForDone(typeScriptService.getSessionFromPath(fullPath), "getSessionFromPath");
         });
         
         if (openOffset !== undefined) {
@@ -245,29 +246,24 @@ define(function (require, exports, module) {
                
                 runs(function () {
                     extensionRequire = testWindow.brackets.getModule("utils/ExtensionLoader").getRequireContextForExtension("TypeScriptCodeIntel");
-                    tsQuickEditMain = extensionRequire("main").TypeScriptQuickEdit;
+                    tsQuickEditMain = TypeScriptQuickEdit;//extensionRequire("main").TypeScriptQuickEdit;
                     editor = EditorManager.getCurrentFullEditor();
                     offsets = this.infos[tokensFile];
-                    
+
                     // regexp token
-                    promise = tsQuickEditMain.typeScriptFunctionProvider(editor, offsets[0]);
-                    expect(promise).toBeNull();
-                    
+                    waitsForFail(tsQuickEditMain.typeScriptFunctionProvider(editor, offsets[0]), "typeScriptFunctionProvider");
+
                     // multi-line comment
-                    promise = tsQuickEditMain.typeScriptFunctionProvider(editor, offsets[1]);
-                    expect(promise).toBeNull();
-                    
+                    waitsForFail(tsQuickEditMain.typeScriptFunctionProvider(editor, offsets[1]), "typeScriptFunctionProvider");
+
                     // single-line comment
-                    promise = tsQuickEditMain.typeScriptFunctionProvider(editor, offsets[2]);
-                    expect(promise).toBeNull();
-                    
+                    waitsForFail(tsQuickEditMain.typeScriptFunctionProvider(editor, offsets[2]), "typeScriptFunctionProvider");
+
                     // string, double quotes
-                    promise = tsQuickEditMain.typeScriptFunctionProvider(editor, offsets[3]);
-                    expect(promise).toBeNull();
-                    
+                    waitsForFail(tsQuickEditMain.typeScriptFunctionProvider(editor, offsets[3]), "typeScriptFunctionProvider");
+
                     // string, single quotes
-                    promise = tsQuickEditMain.typeScriptFunctionProvider(editor, offsets[4]);
-                    expect(promise).toBeNull();
+                    waitsForFail(tsQuickEditMain.typeScriptFunctionProvider(editor, offsets[4]), "typeScriptFunctionProvider");
                 });
             });
             

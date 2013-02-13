@@ -182,7 +182,7 @@ define(function (require, exports, module) {
                 // create Editor instance (containing a CodeMirror instance)
                 runs(function () {
                     testEditor = createMockEditor(testDoc, "typescript");
-                    ////TypeScriptCodeHints.handleEditorChange(testEditor);
+                    ///TypeScriptCodeHints.handleEditorChange(testEditor);
                 });
             });
             
@@ -252,6 +252,12 @@ define(function (require, exports, module) {
 //                var hintObj = expectHints(JSCodeHints.jsHintProvider);
 //                hintsPresent(hintObj, ["null", "undefined", "true", "false"]);
 //            });
+
+            it("should list accessible variables and function names in other files", function () {
+                testEditor.setCursorPos({ line: 6, ch: 0 });
+                var hintObj = expectHints(TypeScriptCodeHints.tsHintProvider);
+                hintsPresent(hintObj, ["D1", "D2", "funE"]);
+            });
             
             it("should NOT list variables, function names and parameter names out of scope", function () {
                 testEditor.setCursorPos({ line: 6, ch: 0 });
@@ -259,10 +265,10 @@ define(function (require, exports, module) {
                 hintsAbsent(hintObj, ["paramB2", "paramB1"]);
             });
 
-            it("should NOT list variables, function names and parameter names in other files", function () {
+            it("should NOT list not accessible variables and parameter names in other files", function () {
                 testEditor.setCursorPos({ line: 6, ch: 0 });
                 var hintObj = expectHints(TypeScriptCodeHints.tsHintProvider);
-                hintsAbsent(hintObj, ["D1", "D2", "funE", "E1", "E2"]);
+                hintsAbsent(hintObj, ["E1", "E2", "paramE1", "paramE2"]);
             });
             
             it("should NOT property names on value lookups", function () {

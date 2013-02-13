@@ -48,7 +48,7 @@ define(function (require, exports, module) {
      * @return {$.Promise} a promise that will be resolved with an InlineWidget
      *      or null if we're not going to provide anything.
      */
-    function _createInlineEditor(hostEditor, hostTsDoc, declInfo) {
+    function _createInlineEditor(hostEditor, declInfo) {
         var result = new $.Deferred();
         
         DocumentManager.getDocumentForPath(declInfo.scriptName)
@@ -82,42 +82,51 @@ define(function (require, exports, module) {
      *      or null if we're not going to provide anything.
      */
     function typeScriptFunctionProvider(hostEditor, pos) {
+        var result = new $.Deferred();
         // Only provide a TypeScript editor when cursor is in TypeScript content
         if (hostEditor.getModeForSelection() !== TypeScriptUtils.MODE_NAME) {
             return null;
         }
-        
         // Only provide TypeScript editor if the selection is within a single line
         var sel = hostEditor.getSelection(false);
         if (sel.start.line !== sel.end.line) {
             return null;
         }
 
-        //TODO: do it async?
-        var hostTsDoc = TypeScriptService.getSession(hostEditor.document).tsDoc;
-        var symbol = hostTsDoc.getSymbolAtPosition(sel.start);
-        var declInfo = hostTsDoc.getDeclarationInfo(symbol);
-        
-        // Cancel if there is no declaration associated to the current selection
-        if (!declInfo) {
-            return null;
-        }
-        
-        // Cancel if the declaration is at the same line as the current selection
-        if (declInfo.scriptName === hostTsDoc.scriptName) {
-            var line = hostEditor.getSelection(false).start.line;
-            if (declInfo.range.start.line === line) {
-                return null;
+        TypeScriptService.getSession(hostEditor.document).done(function (session) {
+            var hostTsDoc = session.tsDoc;
+            var symbol = hostTsDoc.getSymbolAtPosition(sel.start);
+            var declInfo = hostTsDoc.getDeclarationInfo(symbol);
+            // Cancel if there is no declaration associated to the current selection
+            if (!declInfo) {
+                result.reject();
+                return;
             }
-        }
 
-        return _createInlineEditor(hostEditor, hostTsDoc, declInfo);
+            // Cancel if the declaration is at the same line as the current selection
+            if (declInfo.scriptName === hostTsDoc.scriptName) {
+                var line = hostEditor.getSelection(false).start.line;
+                if (declInfo.range.start.line === line) {
+                    result.reject();
+                    return;
+                }
+            }
+
+            _createInlineEditor(hostEditor, declInfo)
+            .done(function (inlineEditor) {
+                result.resolve(inlineEditor);
+            })
+            .fail(function (error) {
+                result.reject(error);
+            });
+        });
+        return result;
     }
 
     AppInit.appReady(function () {
         EditorManager.registerInlineEditProvider(typeScriptFunctionProvider);
+
+        // For unit testing
+        exports.typeScriptFunctionProvider = typeScriptFunctionProvider;
     });
-    
-    // For unit testing
-    exports.typeScriptFunctionProvider = typeScriptFunctionProvider;
 });

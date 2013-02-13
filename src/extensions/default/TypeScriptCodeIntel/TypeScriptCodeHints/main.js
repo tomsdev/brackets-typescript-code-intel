@@ -91,7 +91,7 @@ define(function (require, exports, module) {
      * Returns the completion entries given by typescript and some information about
      * the completion.
      * @param {!{line:number, ch:number}} pos Position where the completion happens
-     * @param {!TypeScriptDocument} doc Document where the completion happens
+     * @param {!TypeScriptDocument} tsDoc Document where the completion happens
      * @returns {{entries: Array, info: {index: number, isMember: boolean, currentText: string}}}
      * @private
      */
@@ -276,15 +276,14 @@ define(function (require, exports, module) {
 	 * Returns a list of hints, possibly deferred, for the current editor
      * context.
 	 *
-	 * @param {Editor} implicitChar
+	 * @param {String} implicitChar
 	 * Either null, if the hinting request was explicit, or a single character
 	 * that represents the last insertion and that indicates an implicit
 	 * hinting request.
 	 *
-	 * @return {Object<hints: Array<(String + jQuery.Obj)>, match: String,
-     *      selectInitial: Boolean>}
-	 * Null if the provider wishes to end the hinting session. Otherwise, a
-	 * response object that provides
+	 * @return {$.Promise}
+	 * Reject if the provider wishes to end the hinting session. Otherwise, resolve
+     * with a response object that provides:
 	 * 1. a sorted array hints that consists of strings
 	 * 2. a string match that is used by the manager to emphasize matching
 	 *    substrings when rendering the hint list
@@ -307,19 +306,18 @@ define(function (require, exports, module) {
             return _getResponse(completion.entries, completion.info.currentText);
         }
 
-        TypeScriptService.getSessionAsync(this.editor.document).done(function (session) {
-            var tsDoc = session.tsDoc;
+        TypeScriptService.getSession(this.editor.document).done(function (session) {
             // if the user typed something that changed the current document
             if (implicitChar) {
                 // wait for the current typescript document "change" event because typescript
                 // has to process the file with the changes before getting the completions
-                $(tsDoc).on(eventName("change"), function () {
-                    $(tsDoc).off(eventName("change"));
-                    hints = _getHints(tsDoc);
+                $(session.tsDoc).on(eventName("change"), function () {
+                    $(session.tsDoc).off(eventName("change"));
+                    hints = _getHints(session.tsDoc);
                     result.resolve(hints);
                 });
             } else {
-                hints = _getHints(tsDoc);
+                hints = _getHints(session.tsDoc);
                 result.resolve(hints);
             }
         });
