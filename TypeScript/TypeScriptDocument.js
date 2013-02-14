@@ -28,6 +28,9 @@
 define(function (require, exports, module) {
     "use strict";
 
+    /**
+     * Includes the TypeScript language services provided by Microsoft.
+     */
     require("TypeScript/thirdparty/ServiceBuilder");
     
     var TypeScriptUtils = require("TypeScript/TypeScriptUtils"),
