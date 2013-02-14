@@ -41,7 +41,7 @@ define(function (require, exports, module) {
      * @type {RegExp}
      */
     function getReferenceRegExp() {
-        return /^\s*\/\/\/\s*<\s*reference\s+path\s*=\s*[""""']([^""""<>|]+)[""""']\s*\/>/gim;
+        return /^\s*\/\/\/\s*<\s*reference\s+path\s*=\s*[""""']([^""""<>|]+\.ts)[""""']\s*\/>/gim;
     }
 
     /**

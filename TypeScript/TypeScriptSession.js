@@ -116,7 +116,9 @@ define(function (require, exports, module) {
         references.removed.forEach(function (relativePath) {
             var fullPath = that.tsDoc.getFullPath(relativePath);
             var doc = that._attachedDocuments[fullPath];
-            that._detachDocument(doc);
+            if (doc) {
+                that._detachDocument(doc);
+            }
         });
 
         this.tsDoc.updateScriptWithChanges(doc, changes);
@@ -175,12 +177,15 @@ define(function (require, exports, module) {
             result = new $.Deferred(),
             fullPath = this.tsDoc.getFullPath(relativePath);
 
-        console.log("Start loading script: ", fullPath);
         DocumentManager.getDocumentForPath(fullPath)
             .done(function (referencedDoc) {
                 that._attachDocument(referencedDoc,
                     that._handleReferencedDocumentChange.bind(that));
                 result.resolve();
+            })
+            .fail(function () {
+                console.error("Referenced document doesn't exist: ", relativePath);
+                result.reject();
             });
         return result;
     };
