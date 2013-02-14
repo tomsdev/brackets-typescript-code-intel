@@ -17,15 +17,15 @@ For the moment, **it includes**:
 
 * **Download and install Brackets**: http://download.brackets.io/
 * **Download or clone this extension** from this repository
-* Put it into the **src/extensions/dev directory of Brackets**
-* Edit the file **src/editor/EditorUtils.js**:
+* Put it into the **www/extensions/dev** directory in the **installation folder of Brackets**
+* Edit the file **www/editor/EditorUtils.js** (as Administrator in Windows):
 
 **Find this lines** at the end of the file:
 
-     case "hx":
-          return "haxe";
+     default:
+            console.log("Called EditorUtils.js _getModeFromFileExtensions with an unhandled file extension: " + ext);
 
-**Add below it** this lines:
+**Add above it** this lines:
 
      case "ts":
           return "text/typescript";
