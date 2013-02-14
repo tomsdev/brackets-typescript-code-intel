@@ -25,6 +25,11 @@
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50, regexp: true */
 /*global define, brackets, $ */
 
+/**
+ * TypeScriptService provides methods to create or get from cache TypeScriptSession
+ * objects. It maintains a cache of this sessions. It listens to the activeEditorChange
+ * event and changes the current session with a new one bound to the new active document.
+ */
 define(function (require, exports, module) {
     "use strict";
 

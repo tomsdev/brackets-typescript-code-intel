@@ -183,7 +183,6 @@ define(function (require, exports, module) {
      */
     TypeScriptDocument.prototype.getFullPath = function (relativePath) {
         var parentPath = PathUtils.getParentPath(this.doc.file.fullPath);
-        // WARNING: won't work with parent relative path for the moment
         return PathUtils.convertRelativePathToFullPath(relativePath, parentPath);
     };
 

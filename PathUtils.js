@@ -36,9 +36,7 @@ define(function (require, exports, module) {
      * @returns {string}
      */
     function convertRelativePathToFullPath(relativePath, directoryPath) {
-        //TODO: handle parent relative path (starting with ../)
         var fullPath = directoryPath + "/" + relativePath;
-        console.log("FullPath calculated: ", fullPath);
         return fullPath;
     }
 

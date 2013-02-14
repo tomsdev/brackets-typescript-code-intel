@@ -307,9 +307,9 @@ define(function (require, exports, module) {
         }
 
         TypeScriptService.getSession(this.editor.document).done(function (session) {
-            // if the user typed something that changed the current document
+            // If the user typed something that changed the current document
             if (implicitChar) {
-                // wait for the current typescript document "change" event because typescript
+                // Wait for the current typescript document "change" event because typescript
                 // has to process the file with the changes before getting the completions
                 $(session.tsDoc).on(eventName("change"), function () {
                     $(session.tsDoc).off(eventName("change"));

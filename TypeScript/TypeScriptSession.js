@@ -106,12 +106,10 @@ define(function (require, exports, module) {
         //TODO: do it only when the change is at the top of the file (before the first line of code)
         var references = this.tsDoc.getReferences(),
             that = this;
-
         // Attach added references
         if (references.added.length > 0) {
             this._attachReferencedDocuments(references.added);
         }
-
         // Detach removed references
         references.removed.forEach(function (relativePath) {
             var fullPath = that.tsDoc.getFullPath(relativePath);
@@ -120,7 +118,6 @@ define(function (require, exports, module) {
                 that._detachDocument(doc);
             }
         });
-
         this.tsDoc.updateScriptWithChanges(doc, changes);
         this.tsDoc.triggerHandlerChange();
     };
@@ -139,11 +136,12 @@ define(function (require, exports, module) {
             console.error("Document for this path already in _attachedDocuments: ", doc.file.fullPath);
             return;
         }
-
+        // Listen to change event
         doc.addRef();
         $(doc).on(TypeScriptUtils.eventName("change"), handleChangeFn);
-        this._attachedDocuments[doc.file.fullPath] = doc;
 
+        this._attachedDocuments[doc.file.fullPath] = doc;
+        // Add the script content
         this.tsDoc.updateScriptWithText(doc);
         console.log("Script attached: ", doc.file.fullPath);
     };
@@ -180,7 +178,7 @@ define(function (require, exports, module) {
         DocumentManager.getDocumentForPath(fullPath)
             .done(function (referencedDoc) {
                 that._attachDocument(referencedDoc,
-                    that._handleReferencedDocumentChange.bind(that));
+                                     that._handleReferencedDocumentChange.bind(that));
                 result.resolve();
             })
             .fail(function () {
