@@ -17,22 +17,10 @@ For the moment, **it includes**:
 
 * **Download and install Brackets**: http://download.brackets.io/
 * **Download or clone this extension** from this repository
-* Put it into the **www/extensions/dev** directory in the **installation folder of Brackets**
-* Edit the file **www/editor/EditorUtils.js** (as Administrator in Windows):
+* **Run Brackets** and in the **Help menu** click on **Show Extensions Folder**
+* **Put the extension into the user folder** (unzip the extension if needed)
 
-**Find this lines** at the end of the file:
-
-     default:
-            console.log("Called EditorUtils.js _getModeFromFileExtensions with an unhandled file extension: " + ext);
-
-**Add above it** this lines:
-
-     case "ts":
-          return "text/typescript";
-          
-**Save it** and you are done !
-
-Run **Brackets** and try it.
+Reload **Brackets** and try it!
 
 You can open a **TypeScript project** or the **sample project** given 
 with this extension in the Sample folder.
