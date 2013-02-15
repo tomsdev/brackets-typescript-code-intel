@@ -113,15 +113,24 @@ define(function (require, exports, module) {
                          current.document.file.fullPath === previous.document.file.fullPath)) {
             return;
         }
+
+        var fullPath = current.document.file.fullPath;
+        // Change the current mode to typescript if the file has the extension .ts
+        // We have to do this because typescript mode is not defined in Brackets
+        // for the moment (in EditorUtils.js)
+        if (PathUtils.hasExtensions(fullPath, ["ts"])) {
+            current.setModeForDocument("text/typescript");
+        }
+
         // Here we could detach the session from the previous editor
         //if (_currentSession && previous) { }
 
         _currentSession = null;
         if (current.getModeForSelection() === TypeScriptUtils.MODE_NAME) {
-            console.log("Current session changing to: ", current.document.file.fullPath);
+            console.log("Current session changing to: ", fullPath);
 
             getSession(current.document).done(function (session) {
-                console.log("Current session changed to: ", current.document.file.fullPath);
+                console.log("Current session changed to: ", fullPath);
                 _currentSession = session;
             });
         }

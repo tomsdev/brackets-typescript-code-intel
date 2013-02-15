@@ -49,7 +49,25 @@ define(function (require, exports, module) {
         return path.substr(0, path.lastIndexOf('/'));
     }
 
+    /**
+     * Returns true if the path contains one of the given extension. Otherwise, returns
+     * false.
+     * @param {string} path
+     * @param {Array.<string>} extensions
+     * @returns {boolean}
+     */
+    function hasExtensions(path, extensions) {
+        if (!path || !extensions || !extensions.length) {
+            return false;
+        }
+        var i = path.lastIndexOf("."),
+            ext = (i === -1 || i >= path.length - 1) ? path : path.substr(i + 1);
+
+        return (extensions.indexOf(ext.toLowerCase()) !== -1);
+    }
+
     // Define public API
     exports.convertRelativePathToFullPath = convertRelativePathToFullPath;
     exports.getParentPath                 = getParentPath;
+    exports.hasExtensions                 = hasExtensions;
 });
