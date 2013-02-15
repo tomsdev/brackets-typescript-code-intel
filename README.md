@@ -37,3 +37,12 @@ Run **Brackets** and try it.
 You can open a **TypeScript project** or the **sample project** given 
 with this extension in the Sample folder.
 
+##Notes
+
+* Syntax highlighting on TypeScript files only works with Brackets version sprint 20 (and later).
+
+##Roadmap
+
+* Errors in code
+* Compile-on-save
+* Documentation and signature viewer
