@@ -25,9 +25,9 @@ Reload **Brackets** and try it!
 You can open a **TypeScript project** or the **sample project** given 
 with this extension in the Sample folder.
 
-##Notes
+##Compatibility
 
-* Syntax highlighting on TypeScript files only works with Brackets version sprint 20 (and later).
+* Tested on Mac and PC with Brackets version sprint 21.
 
 ##Roadmap
 

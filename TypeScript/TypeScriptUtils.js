@@ -29,7 +29,8 @@ define(function (require, exports, module) {
     "use strict";
     
     var MODE_NAME = "text/typescript";
-    
+    var LANGUAGE_ID = "typescript";
+
     /**
      * Get a typescript-specific event name
      */
@@ -83,6 +84,7 @@ define(function (require, exports, module) {
 
     // Define public API
     exports.MODE_NAME      = MODE_NAME;
+    exports.LANGUAGE_ID    = LANGUAGE_ID;
     exports.eventName      = eventName;
     exports.getObjectsDiff = getObjectsDiff;
     exports.getObjectKeys  = getObjectKeys;

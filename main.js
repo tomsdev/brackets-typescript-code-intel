@@ -28,6 +28,16 @@
 define(function (require, exports, module) {
     "use strict";
 
+    var LanguageManager = brackets.getModule("language/LanguageManager");
+
+    LanguageManager.defineLanguage("typescript", {
+        name: "TypeScript",
+        mode: ["javascript", "text/typescript"],
+        fileExtensions: ["ts"],
+        blockComment: ["/*", "*/"],
+        lineComment: "//"
+    });
+
     exports.TypeScript          = require("TypeScript/main");
     exports.TypeScriptQuickEdit = require("TypeScriptQuickEdit/main");
     exports.TypeScriptCodeHints = require("TypeScriptCodeHints/main");

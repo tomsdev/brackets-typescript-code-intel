@@ -84,7 +84,8 @@ define(function (require, exports, module) {
     function typeScriptFunctionProvider(hostEditor, pos) {
         var result = new $.Deferred();
         // Only provide a TypeScript editor when cursor is in TypeScript content
-        if (hostEditor.getModeForSelection() !== TypeScriptUtils.MODE_NAME) {
+        var languageId = hostEditor.getLanguageForSelection().getId();
+        if (languageId !== TypeScriptUtils.LANGUAGE_ID) {
             return null;
         }
         // Only provide TypeScript editor if the selection is within a single line
