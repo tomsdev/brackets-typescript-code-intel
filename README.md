@@ -34,3 +34,7 @@ with this extension in the Sample folder.
 * Errors in code
 * Compile-on-save
 * Documentation and signature viewer
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/tomsdev/brackets-typescript-code-intel/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
