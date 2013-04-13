@@ -16,18 +16,16 @@ For the moment, **it includes**:
 ##Installation
 
 * **Download and install Brackets**: http://download.brackets.io/
-* **Download or clone this extension** from this repository
-* **Run Brackets** and in the **Help menu** click on **Show Extensions Folder**
-* **Put the extension into the user folder** (unzip the extension if needed)
+* **Run Brackets** and in the **File menu**: `Install Extension...` > `http://github.com/tomsdev/brackets-typescript-code-intel`
 
-Reload **Brackets** and try it!
+Reload **Brackets** if the installation failed and try it!
 
 You can open a **TypeScript project** or the **sample project** given 
 with this extension in the Sample folder.
 
 ##Compatibility
 
-* Tested on Mac and PC with Brackets version sprint 21.
+* Tested on Mac and PC with Brackets version sprint 23.
 
 ##Roadmap
 
