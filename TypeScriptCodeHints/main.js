@@ -350,7 +350,7 @@ define(function (require, exports, module) {
 
 	AppInit.appReady(function () {
 		var tsHints = new TsHints();
-		CodeHintManager.registerHintProvider(tsHints, [TypeScriptUtils.MODE_NAME], 0);
+		CodeHintManager.registerHintProvider(tsHints, [TypeScriptUtils.LANGUAGE_ID], 0);
 
 		// For unit testing
 		exports.tsHintProvider = tsHints;
