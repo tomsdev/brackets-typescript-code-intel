@@ -1,6 +1,10 @@
 Brackets TypeScript Code Intel 
 -------------------
 
+**!! This extension is looking for contributors to make it works with the latest version of TypeScript and Brackets !!**
+  
+  
+
 This extension adds support for writing **TypeScript in Brackets** ! 
 
 For the moment, **it includes**:
