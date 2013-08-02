@@ -1,7 +1,7 @@
 Brackets TypeScript Code Intel 
 -------------------
 
-**!! This extension is looking for contributors to make it works with the latest version of TypeScript and Brackets !!**
+##**!! This extension is looking for contributors to make it work with the latest version of TypeScript and Brackets !!**
   
   
 
