@@ -29,7 +29,7 @@ with this extension in the Sample folder.
 
 ##Compatibility
 
-* Tested on Mac and PC with Brackets version sprint 23.
+* Tested on Mac and PC with Brackets version sprint 23 and TypeScript 0.8.2.
 
 ##Roadmap
 
