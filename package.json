@@ -1,7 +1,7 @@
 {
     "name": "brackets-typescript-code-intel",
     "title": "Brackets TypeScript Code Intel",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Extension for Brackets that adds TypeScript support (Auto-completion, Quick Edit and more soon).",
     "homepage": "https://github.com/tomsdev/brackets-typescript-code-intel",
     "author": "Thomas Laurent",
