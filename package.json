@@ -1,9 +1,9 @@
 {
     "name": "brackets-typescript-code-intel",
     "title": "Brackets TypeScript Code Intel",
-    "version": "0.2.0",
-    "description": "Open a quint, YUI or Jasmine file to run tests",
-    "homepage": "http://brackets-xunit.github.io",
+    "version": "0.1.0",
+    "description": "Extension for Brackets that adds TypeScript support (Auto-completion, Quick Edit and more soon).",
+    "homepage": "https://github.com/tomsdev/brackets-typescript-code-intel",
     "author": "Thomas L.",
     "categories":"Typescript",
     "keywords": [
@@ -11,7 +11,7 @@
         "Language",
         "Quick Edit",
         "Jquery",
-        "AutComplete"
+        "AutoComplete"
     ],
     "files": [
         "main.js",
