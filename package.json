@@ -4,7 +4,7 @@
     "version": "0.1.0",
     "description": "Extension for Brackets that adds TypeScript support (Auto-completion, Quick Edit and more soon).",
     "homepage": "https://github.com/tomsdev/brackets-typescript-code-intel",
-    "author": "Thomas L.",
+    "author": "Thomas Laurent",
     "categories":"Typescript",
     "keywords": [
         "TypeScript",
