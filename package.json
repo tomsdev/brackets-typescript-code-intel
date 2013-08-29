@@ -1,0 +1,44 @@
+{
+    "name": "brackets-typescript-code-intel",
+    "title": "Brackets TypeScript Code Intel",
+    "version": "0.2.0",
+    "description": "Open a quint, YUI or Jasmine file to run tests",
+    "homepage": "http://brackets-xunit.github.io",
+    "author": "Thomas L.",
+    "categories":"Typescript",
+    "keywords": [
+        "TypeScript",
+        "Language",
+        "Quick Edit",
+        "Jquery",
+        "AutComplete"
+    ],
+    "files": [
+        "main.js",
+        "PathUtils.js",
+        "Sample/ext.ts",
+        "Sample/jquery.d.ts",
+        "Sample/main.ts",
+        "Sample/other.ts",
+        "TypeScript/main.js",
+        "TypeScript/thirdparty/ServiceBuilder.js",
+        "TypeScript/TypeScriptDocument.js",
+        "TypeScript/TypeScriptService.js",
+        "TypeScript/TypeScriptSession.js",
+        "TypeScript/TypeScriptUtils.js",
+        "TypeScriptCodeHints/main.js",
+        "TypeScriptCodeHints/unittest-files/file1.ts",
+        "TypeScriptCodeHints/unittest-files/file2.ts",
+        "TypeScriptCodeHints/unittests.js",
+        "TypeScriptQuickEdit/main.js",
+        "TypeScriptQuickEdit/unittest-files/syntax/test1inline.ts",
+        "TypeScriptQuickEdit/unittest-files/syntax/test1main.ts",
+        "TypeScriptQuickEdit/unittest-files/syntax/tokens.ts",
+        "TypeScriptQuickEdit/unittests.js",
+        "unittests.js"
+    ],
+    "engines": {
+        "brackets": ">=0.23.0",
+        "typescript": "0.8.2"
+    }
+}
