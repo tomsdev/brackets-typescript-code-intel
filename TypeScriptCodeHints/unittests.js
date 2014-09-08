@@ -29,9 +29,9 @@ define(function (require, exports, module) {
     "use strict";
 
     var Editor              = brackets.getModule("editor/Editor").Editor,
-        EditorManager       = brackets.getModule("editor/EditorManager"),
         FileUtils           = brackets.getModule("file/FileUtils"),
         DocumentManager     = brackets.getModule("document/DocumentManager"),
+        MainViewManager     = brackets.getModule("view/MainViewManager"),
         SpecRunnerUtils     = brackets.getModule("spec/SpecRunnerUtils"),
         UnitTestReporter    = brackets.getModule("test/UnitTestReporter"),
         TypeScriptCodeHints = require("TypeScriptCodeHints/main");
@@ -51,8 +51,7 @@ define(function (require, exports, module) {
         
         // Initialize EditorManager
         var $editorHolder = $("<div id='mock-editor-holder'/>");
-        EditorManager.setEditorHolder($editorHolder);
-        EditorManager._init();
+        MainViewManager._initialize($editorHolder);
         $("body").append($editorHolder);
         
         // create Editor instance
