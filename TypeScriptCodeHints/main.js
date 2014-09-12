@@ -26,12 +26,12 @@
 /*global define, brackets, $, window */
 
 define(function (require, exports, module) {
-	"use strict";
+  "use strict";
 
-	var AppInit           = brackets.getModule("utils/AppInit"),
-		CodeHintManager   = brackets.getModule("editor/CodeHintManager"),
+  var AppInit             = brackets.getModule("utils/AppInit"),
+        CodeHintManager   = brackets.getModule("editor/CodeHintManager"),
         Async             = brackets.getModule("utils/Async"),
-        StringUtils       = brackets.getModule("utils/StringUtils"),
+        _                 = brackets.getModule("thirdparty/lodash"),
         TypeScriptUtils   = require("TypeScript/main").TypeScriptUtils,
         TypeScriptService = require("TypeScript/main").TypeScriptService;
     
@@ -196,9 +196,9 @@ define(function (require, exports, module) {
 
                 // highlight the matched portion of each hint
                 if (index >= 0) {
-                    var prefix  = StringUtils.htmlEscape(hint.slice(0, index)),
-                        match   = StringUtils.htmlEscape(hint.slice(index, index + query.length)),
-                        suffix  = StringUtils.htmlEscape(hint.slice(index + query.length));
+                    var prefix  = _.escape(hint.slice(0, index)),
+                        match   = _.escape(hint.slice(index, index + query.length)),
+                        suffix  = _.escape(hint.slice(index + query.length));
 
                     $hintObj.append(delimiter + prefix)
                         .append($('<span>')

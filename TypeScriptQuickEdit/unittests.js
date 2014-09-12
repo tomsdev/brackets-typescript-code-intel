@@ -30,12 +30,10 @@ define(function (require, exports, module) {
 
     var CommandManager,         // loaded from brackets.test
         EditorManager,          // loaded from brackets.test
-        FileIndexManager,       // loaded from brackets.test
         PerfUtils,              // loaded from brackets.test
         JSUtils,                // loaded from brackets.test
         
         FileUtils           = brackets.getModule("file/FileUtils"),
-        NativeFileSystem    = brackets.getModule("file/NativeFileSystem").NativeFileSystem,
         SpecRunnerUtils     = brackets.getModule("spec/SpecRunnerUtils"),
         UnitTestReporter    = brackets.getModule("test/UnitTestReporter"),
         TypeScriptQuickEdit = require("TypeScriptQuickEdit/main");
@@ -160,7 +158,6 @@ define(function (require, exports, module) {
                     testWindow          = w;
                     EditorManager       = testWindow.brackets.test.EditorManager;
                     CommandManager      = testWindow.brackets.test.CommandManager;
-                    FileIndexManager    = testWindow.brackets.test.FileIndexManager;
                     JSUtils             = testWindow.brackets.test.JSUtils;
                 });
                 

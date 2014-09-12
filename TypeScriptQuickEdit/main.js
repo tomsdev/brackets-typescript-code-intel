@@ -30,10 +30,8 @@ define(function (require, exports, module) {
     
     var AppInit                 = brackets.getModule("utils/AppInit"),
         MultiRangeInlineEditor  = brackets.getModule("editor/MultiRangeInlineEditor").MultiRangeInlineEditor,
-        FileIndexManager        = brackets.getModule("project/FileIndexManager"),
         EditorManager           = brackets.getModule("editor/EditorManager"),
         DocumentManager         = brackets.getModule("document/DocumentManager"),
-        NativeFileSystem        = brackets.getModule("file/NativeFileSystem").NativeFileSystem,
         FileUtils               = brackets.getModule("file/FileUtils"),
         Async                   = brackets.getModule("utils/Async"),
         TypeScriptUtils         = require("TypeScript/main").TypeScriptUtils,
