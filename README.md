@@ -1,42 +1,32 @@
-Brackets TypeScript Code Intel 
--------------------
+# Brackets TypeScript Code Intel #
 
-##**!! This extension is looking for contributors to make it work with the latest version of TypeScript and Brackets !!**
+## !! This extension is looking for contributors to make it work with the latest version of TypeScript and Brackets !! ##
   
-  
+This extension adds support for writing [TypeScript](http://www.typescriptlang.org/) in [Brackets](http://brackets.io/)! 
 
-This extension adds support for writing **TypeScript in Brackets** ! 
-
-For the moment, **it includes**:
-
+It currently supports:
 * Smart code **auto-completion**
-* **External files inclusion** with references ( **.ts** and **.d.ts** )
+* **External files inclusion** with references (`.ts` and `.d.ts`)
 * **Quick Edit** (open the declaration of what you clicked on)
 
 ![TypeScript auto-completion screenshot](http://i.minus.com/jBFtqwppfaQ1d.PNG "TypeScript auto-completion screenshot")
 
 ![TypeScript auto-completion screenshot](http://i.minus.com/jbpJxdk9UBkkUA.PNG "TypeScript auto-completion screenshot")
 
-##Installation
+## Installation ##
 
-* **Download and install Brackets**: http://download.brackets.io/
-* **Run Brackets** and in the **File menu**: `Install Extension...` > `http://github.com/tomsdev/brackets-typescript-code-intel`
+* Download and install Brackets from [brackets.io](http://brackets.io/)
+* Open the Brackets Extension Manager and search for "typescript intel"
 
-Reload **Brackets** if the installation failed and try it!
-
-You can open a **TypeScript project** or the **sample project** given 
+You can open a TypeScript project or the sample project given 
 with this extension in the Sample folder.
 
-##Compatibility
+## Compatibility ##
 
 * Tested on Mac and PC with Brackets version sprint 23 and TypeScript 0.8.2.
 
-##Roadmap
+## Roadmap ##
 
 * Errors in code
 * Compile-on-save
 * Documentation and signature viewer
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/tomsdev/brackets-typescript-code-intel/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
