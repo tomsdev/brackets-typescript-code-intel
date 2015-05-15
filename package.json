@@ -38,7 +38,7 @@
         "unittests.js"
     ],
     "engines": {
-        "brackets": ">=0.23.0",
+        "brackets": "0.23.x",
         "typescript": "0.8.2"
     }
 }
